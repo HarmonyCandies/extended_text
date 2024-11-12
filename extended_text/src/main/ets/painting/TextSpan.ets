@@ -20,9 +20,9 @@ export class TextSpan extends InlineSpan {
   children?: Array<InlineSpan>;
 
   build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void {
-    let hasStyle = this.textStyle != undefined;
+    let hasStyle = this.style != undefined;
     if (hasStyle) {
-      builder.pushStyle(this.textStyle!);
+      builder.pushStyle(this.style!);
     }
 
     if (this.text != undefined) {

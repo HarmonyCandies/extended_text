@@ -18,7 +18,7 @@ export struct ExtendedParagraph {
   builder() {
     ForEach([...WidgetSpan.extractFromInlineSpan(this.text),
       ...(this.overflowWidget == undefined ? [] : [this.overflowWidget])], (item: WidgetBuilder, index: number) => {
-      item.builder.builder()
+      item.builder.builder(item.builderArgs)
     })
   };
 
@@ -40,7 +40,7 @@ export struct ExtendedParagraph {
 
     if (index < children.length && this._overflowWidgetRect != null) {
       // overflow widget
-      let child = children[index];
+      let child = children[children.length-1];
       let didVisualOverflow = this._didVisualOverflow(paragraph, constraint);
       if (didVisualOverflow) {
         child.layout({

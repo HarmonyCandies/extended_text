@@ -7,16 +7,19 @@ export enum TextOverflowPosition {
 }
 
 export interface TextOverflowWidgetOptions {
-  builder: WrappedBuilder<[]>;
+  builder: WrappedBuilder<[ESObject]>;
   position?: TextOverflowPosition;
+  builderArgs?: ESObject;
 }
 
 export class TextOverflowWidget implements WidgetBuilder {
   constructor(options: TextOverflowWidgetOptions) {
     this.builder = options.builder;
     this.position = options.position ?? TextOverflowPosition.end;
+    this.builderArgs = options.builderArgs;
   }
 
-  builder: WrappedBuilder<[]>;
+  builder: WrappedBuilder<[ESObject]>;
   position: TextOverflowPosition;
+  builderArgs: ESObject;
 }

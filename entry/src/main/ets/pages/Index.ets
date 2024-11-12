@@ -4,39 +4,23 @@ import { common2D } from "@kit.ArkGraphics2D"
 import { image } from '@kit.ImageKit';
 import { ExtendedText, TextSpan } from '@candies/extended_text'
 import * as extended_text from '@candies/extended_text'
+import { MySpecialTextSpanBuilder } from '../text/MySpecialTextSpanBuilder';
+
 
 @Builder
-function test() {
-  Column()
-    .backgroundColor(Color.Blue)
-    .padding(25)
-    .width(50)
-    .height(50)
-    .margin({
-      top: 10,
-      left: 5,
-      right: 15,
-      bottom: 9,
-    })
-
-  // Text('测试一下');
-}
-
-@Builder
-function buildTextOverflowWidget() {
+function buildTextOverflowWidget(builderArgs: ESObject) {
   Row() {
     Text("\u2026")
     Image($rawfile('candies.png')).width(20).height(20)
-  }
+  }.onClick(() => {
+    (builderArgs as () => void)();
+  })
 }
 
 @Entry
 @Component
 struct Index {
-  @State message: string = 'Hello World';
-  private settings: RenderingContextSettings = new RenderingContextSettings(true)
-  private textContext: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-
+  private specialTextSpanBuilder: MySpecialTextSpanBuilder = new MySpecialTextSpanBuilder();
   build() {
     Column() {
       Text() {
@@ -56,29 +40,15 @@ struct Index {
       Row().width(100).height(100).backgroundColor(Color.Blue)
 
       ExtendedText({
-        text: '你好大的打击啊看得见啊看建档立卡1你好大的打击啊看得见啊看建档立卡1你好大的打击啊看得见啊看建档立卡1你好大的打击啊看得见啊看建档立卡1',
-        textSpan: new extended_text.TextSpan({
-          text: '测试', children: [
-          // new extended_text.WidgetSpan({
-          //   builder: wrapBuilder(test),
-          // }),
-            new extended_text.TextSpan({
-              text: '后缀', textStyle: {
-                color: {
-                  alpha: 255,
-                  red: 255,
-                  green: 0,
-                  blue: 0,
-                },
-                fontSize: vp2px(18),
-              },
-            },)
-          ],
-        }),
+        text: "[love]Extended text help you to build rich text quickly. any special text you will have with extended text." +
+          "It\'s my pleasure to invite you to join $HarmonyCandies$ if you want to make harmony better.[love]" +
+          "'if you meet any problem, please let me know @zmtzawqlp .",
+        specialTextSpanBuilder: this.specialTextSpanBuilder,
         overflowWidget: new extended_text.TextOverflowWidget(
           {
             builder: wrapBuilder(buildTextOverflowWidget),
-            position: extended_text.TextOverflowPosition.start,
+            position: extended_text.TextOverflowPosition.end,
+            builderArgs: this.onTextOverflowWidgetClick,
           }
         ),
         paragraphStyle: {
@@ -93,9 +63,13 @@ struct Index {
             // ellipsis: '...abc',
             // ellipsisMode: text.EllipsisMode.END,
           },
-          maxLines:3,
+          maxLines: 4,
         },
       }).width('100%')
     }
+  }
+
+  onTextOverflowWidgetClick(): void {
+    console.log('点击溢出文本')
   }
 }

@@ -6,6 +6,7 @@ import { InlineSpan } from '../painting/InlineSpan';
 import { ExtendedParagraph } from './Paragraph';
 import { TextSpan } from '../painting/TextSpan';
 import { FrameNode, NodeController, RenderNode } from '@kit.ArkUI';
+import { SpecialTextSpanBuilder } from '../SpecialTextSpanBuilder';
 
 @Component
 export struct ExtendedText {
@@ -16,6 +17,7 @@ export struct ExtendedText {
   text?: string;
   private myNodeController: MyNodeController = new MyNodeController()
   textSpan?: InlineSpan;
+  specialTextSpanBuilder?: SpecialTextSpanBuilder;
 
   build() {
     Stack() {
@@ -23,12 +25,16 @@ export struct ExtendedText {
       ExtendedParagraph({
         overflowWidget: this.overflowWidget,
         paragraphStyle: this.paragraphStyle,
-        text: new TextSpan(
-          {
-            text: this.text,
-            children: this.textSpan != undefined ? [this.textSpan] : [],
-            textStyle: this.paragraphStyle?.textStyle,
-          }),
+        text: this.specialTextSpanBuilder != undefined && this.text != undefined ? this.specialTextSpanBuilder.build(
+          this.text!,
+          this.paragraphStyle?.textStyle,
+        ) :
+          new TextSpan(
+            {
+              text: this.text,
+              children: this.textSpan != undefined ? [this.textSpan] : [],
+              style: this.paragraphStyle?.textStyle,
+            }),
         onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
           this.myNodeController.clearNodes();
           let node = new MyRenderNode(paragraph, overflowClipRects);

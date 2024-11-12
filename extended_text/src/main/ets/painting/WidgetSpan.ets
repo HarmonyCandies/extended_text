@@ -7,24 +7,27 @@ import { InlineSpan } from "../../../../Index";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
 
 export interface WidgetSpanOptions extends PlaceholderSpanOptions {
-  builder: WrappedBuilder<[]>;
+  builder: WrappedBuilder<[ESObject]>;
+  builderArgs: ESObject;
 }
 
 export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
   constructor(options: WidgetSpanOptions) {
     super(options)
     this.builder = options.builder;
+    this.builderArgs = options.builderArgs;
   }
 
-  builder: WrappedBuilder<[]>;
+  builder: WrappedBuilder<[ESObject]>;
+  builderArgs: ESObject;
 
   build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void {
     if (builder.placeholderCount >= dimensions.length) {
       return;
     }
-    let hasStyle = this.textStyle != undefined;
+    let hasStyle = this.style != undefined;
     if (hasStyle) {
-      builder.pushStyle(this.textStyle!);
+      builder.pushStyle(this.style!);
     }
     let currentDimensions = dimensions[builder.placeholderCount];
     builder.addPlaceholder({

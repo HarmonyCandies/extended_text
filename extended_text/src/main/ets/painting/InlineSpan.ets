@@ -4,14 +4,14 @@ import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
 
 
 export interface InlineSpanOptions {
-  textStyle?: text.TextStyle;
+  style?: text.TextStyle;
 }
 
 export abstract class InlineSpan {
-  textStyle?: text.TextStyle;
+  style?: text.TextStyle;
 
   constructor(options: InlineSpanOptions) {
-    this.textStyle = options.textStyle;
+    this.style = options.style;
   }
 
   abstract build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void;
