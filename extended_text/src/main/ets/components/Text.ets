@@ -16,7 +16,6 @@ export struct ExtendedText {
   text?: string;
   private myNodeController: MyNodeController = new MyNodeController()
   textSpan?: InlineSpan;
-  textStyle?: text.TextStyle;
 
   build() {
     Stack() {
@@ -28,11 +27,11 @@ export struct ExtendedText {
           {
             text: this.text,
             children: this.textSpan != undefined ? [this.textSpan] : [],
-            textStyle: this.textStyle ?? this.paragraphStyle?.textStyle,
+            textStyle: this.paragraphStyle?.textStyle,
           }),
-        onDrawText: (paragraph) => {
+        onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
           this.myNodeController.clearNodes();
-          let node = new MyRenderNode(paragraph);
+          let node = new MyRenderNode(paragraph, overflowClipRects);
           node.size = {
             width: paragraph.getMaxWidth(),
             height: paragraph.getHeight(),
@@ -47,15 +46,43 @@ export struct ExtendedText {
 }
 
 class MyRenderNode extends RenderNode {
-  constructor(paragraph: text.Paragraph) {
+  constructor(paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>) {
     super();
     this.paragraph = paragraph;
+    this.overflowClipRects = overflowClipRects;
   }
 
-  paragraph: text.Paragraph
+  paragraph: text.Paragraph;
+  overflowClipRects: Array<common2D.Rect>;
 
   async draw(context: DrawContext) {
+    if (this.overflowClipRects.length != 0) {
+      context.canvas.saveLayer();
+
+      for (let index = 0; index < this.overflowClipRects.length; index++) {
+        const overflowClipRect = this.overflowClipRects[index];
+        context.canvas.clipRect(overflowClipRect, drawing.ClipOp.DIFFERENCE);
+      }
+    }
     this.paragraph.paint(context.canvas, 0, 0);
+    // let xxx = new drawing.Brush();
+    // xxx.setColor({
+    //   alpha: 50,
+    //   red: 255,
+    //   green: 0,
+    //   blue: 0,
+    // },)
+    // context.canvas.attachBrush(xxx)
+    // context.canvas.drawRect({
+    //   top: 0,
+    //   left: 0,
+    //   right: context.size.width,
+    //   bottom: context.size.height,
+    // })
+
+    if (this.overflowClipRects.length != 0) {
+      context.canvas.restore();
+    }
   }
 }
 
