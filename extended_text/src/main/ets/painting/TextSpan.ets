@@ -2,6 +2,7 @@ import { InlineSpan, InlineSpanOptions } from "./InlineSpan";
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
+import { StringBuffer } from "../Utils";
 
 export interface TextSpanOptions extends InlineSpanOptions {
 
@@ -14,6 +15,12 @@ export class TextSpan extends InlineSpan {
     super(options);
     this.text = options.text;
     this.children = options.children;
+    this.actualText = this.actualText ?? this.text;
+    this.range = {
+      start: options.start,
+      end: options.start != undefined ? options.start + (options.actualText ?? this.text ?? '').length : undefined
+    };
+
   }
 
   text?: string;
@@ -68,5 +75,18 @@ export class TextSpan extends InlineSpan {
       }
     }
     return true;
+  }
+
+  computeToPlainText(buffer: StringBuffer): void {
+    if (this.text != undefined) {
+      buffer.write(this.text);
+    }
+
+    if (this.children != undefined) {
+      for (let index = 0; index < this.children.length; index++) {
+        const child = this.children[index];
+        child.computeToPlainText(buffer);
+      }
+    }
   }
 }

@@ -2,17 +2,19 @@ import { drawing } from '@kit.ArkGraphics2D'
 import { text } from "@kit.ArkGraphics2D"
 import { common2D } from "@kit.ArkGraphics2D"
 import { image } from '@kit.ImageKit';
-import { ExtendedText, TextSpan } from '@candies/extended_text'
+import { ColorUtils, ExtendedText, TextSpan } from '@candies/extended_text'
 import * as extended_text from '@candies/extended_text'
 import { MySpecialTextSpanBuilder } from '../text/MySpecialTextSpanBuilder';
-
+import { promptAction } from '@kit.ArkUI';
 
 @Builder
 function buildTextOverflowWidget(builderArgs: ESObject) {
   Row() {
     Text("\u2026")
     Image($rawfile('candies.png')).width(20).height(20)
-  }.onClick(() => {
+  }
+  .alignItems(VerticalAlign.Center)
+  .onClick(() => {
     (builderArgs as () => void)();
   })
 }
@@ -21,6 +23,15 @@ function buildTextOverflowWidget(builderArgs: ESObject) {
 @Component
 struct Index {
   private specialTextSpanBuilder: MySpecialTextSpanBuilder = new MySpecialTextSpanBuilder();
+  context: Context = getContext(this);
+  content: string =
+    "[love]😀Extended text help you to build rich text quickly.[40] any special text you will have with extended text." +
+      "It\'s my pleasure to invite you to join $HarmonyCandies$ if you want to make harmony better.[love]" +
+      "'if you meet any problem, please let me know @zmtzawqlp ."
+
+  aboutToAppear() {
+
+  }
   build() {
     Column() {
       Text() {
@@ -40,9 +51,45 @@ struct Index {
       Row().width(100).height(100).backgroundColor(Color.Blue)
 
       ExtendedText({
-        text: "[love]Extended text help you to build rich text quickly. any special text you will have with extended text." +
-          "It\'s my pleasure to invite you to join $HarmonyCandies$ if you want to make harmony better.[love]" +
-          "'if you meet any problem, please let me know @zmtzawqlp .",
+        text: this.content,
+        specialTextSpanBuilder: this.specialTextSpanBuilder,
+        overflowWidget: new extended_text.TextOverflowWidget(
+          {
+            builder: wrapBuilder(buildTextOverflowWidget),
+            position: extended_text.TextOverflowPosition.start,
+            builderArgs: this.onTextOverflowWidgetClick,
+          }
+        ),
+        paragraphStyle: {
+          textStyle: {
+            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
+            fontSize: vp2px(18),
+          },
+          maxLines: 4,
+        },
+      })
+      ExtendedText({
+        text: this.content,
+        specialTextSpanBuilder: this.specialTextSpanBuilder,
+        overflowWidget: new extended_text.TextOverflowWidget(
+          {
+            builder: wrapBuilder(buildTextOverflowWidget),
+            position: extended_text.TextOverflowPosition.middle,
+            builderArgs: this.onTextOverflowWidgetClick,
+          }
+        ),
+        paragraphStyle: {
+          textStyle: {
+            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
+            fontSize: vp2px(18),
+          },
+          maxLines: 4,
+        },
+      }).margin({
+        top: 50,
+      })
+      ExtendedText({
+        text: this.content,
         specialTextSpanBuilder: this.specialTextSpanBuilder,
         overflowWidget: new extended_text.TextOverflowWidget(
           {
@@ -53,23 +100,18 @@ struct Index {
         ),
         paragraphStyle: {
           textStyle: {
-            color: {
-              alpha: 255,
-              red: 0,
-              green: 0,
-              blue: 255,
-            },
+            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
             fontSize: vp2px(18),
-            // ellipsis: '...abc',
-            // ellipsisMode: text.EllipsisMode.END,
           },
           maxLines: 4,
         },
-      }).width('100%')
+      }).margin({
+        top: 50,
+      })
     }
   }
 
   onTextOverflowWidgetClick(): void {
-    console.log('点击溢出文本')
+    promptAction.showToast({ message: '点击溢出文本', alignment: Alignment.Center, })
   }
 }

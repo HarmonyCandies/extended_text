@@ -8,16 +8,18 @@ export abstract class SpecialText {
   private endFlag: string;
   textStyle?: text.TextStyle;
   start?: number;
+  context: Context;
 
   get startFlag(): string {
     return this._startFlag;
   }
 
-  constructor(startFlag: string, endFlag: string, start?: number, textStyle?: text.TextStyle) {
+  constructor(startFlag: string, endFlag: string, context: Context, start?: number, textStyle?: text.TextStyle) {
     this._startFlag = startFlag;
     this.endFlag = endFlag;
     this.textStyle = textStyle;
     this.start = start;
+    this.context = context;
   }
 
   // 判断是否是 SpecialText 的结束标记
@@ -50,7 +52,7 @@ export abstract class SpecialText {
 
 export abstract class SpecialTextSpanBuilder {
   // 构建包含特殊文本的 TextSpan
-  build(data: string, textStyle?: text.TextStyle,): TextSpan {
+  build(data: string, context: Context, textStyle?: text.TextStyle,): TextSpan {
     if (data === '') {
       return new TextSpan({ text: '', style: textStyle });
     }
@@ -73,7 +75,7 @@ export abstract class SpecialTextSpanBuilder {
             textStack = '';
           }
         } else {
-          specialText = this.createSpecialText(textStack, i, textStyle);
+          specialText = this.createSpecialText(textStack, i, context, textStyle);
           if (specialText) {
             if (textStack.length - specialText.startFlag.length >= 0) {
               textStack = textStack.slice(0, textStack.length - specialText.startFlag.length);
@@ -105,6 +107,7 @@ export abstract class SpecialTextSpanBuilder {
   abstract createSpecialText(
     flag: string,
     index: number,
+    context: Context,
     textStyle?: text.TextStyle,
   ): SpecialText | null;
 
@@ -132,7 +135,7 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
 
   // 构建带有正则表达式的文本
   build(
-    data: string,
+    data: string, context: Context,
     textStyle: text.TextStyle,
   ): TextSpan {
     if (data === '') {
@@ -141,7 +144,7 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
 
     const children: InlineSpan[] = [];
     if (this.regExps.length > 0) {
-      this.buildWithRegExp(data, 0, [...this.regExps], children, textStyle);
+      this.buildWithRegExp(data, 0, [...this.regExps], children, context, textStyle);
     }
 
     return new TextSpan({ text: '', children: children, style: textStyle, });
@@ -153,6 +156,7 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
     start: number,
     copyRegExps: RegExpSpecialText[],
     children: InlineSpan[],
+    context: Context,
     textStyle?: text.TextStyle,
   ): void {
     if (data === '') {
@@ -176,7 +180,7 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
         start += matchString.length;
       } else { // non-match
         if (part.length > 0) {
-          this.buildWithRegExp(part, start, copyRegExps.slice(1), children, textStyle,);
+          this.buildWithRegExp(part, start, copyRegExps.slice(1), children, context, textStyle,);
           start += part.length;
         }
       }
@@ -188,6 +192,7 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
   createSpecialText(
     flag: string,
     index: number,
+    context: Context,
     textStyle?: text.TextStyle,
   ): SpecialText | null {
     return null;

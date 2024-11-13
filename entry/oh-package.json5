@@ -6,7 +6,8 @@
   "author": "",
   "license": "",
   "dependencies": {
-    '@candies/extended_text': 'file:../extended_text'
+    '@candies/extended_text': 'file:../extended_text',
+    // '@candies/extended_text': 'file:extended_text.har'
   }
 }
 

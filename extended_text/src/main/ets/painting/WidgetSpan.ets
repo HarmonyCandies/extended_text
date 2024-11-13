@@ -9,17 +9,25 @@ import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
 export interface WidgetSpanOptions extends PlaceholderSpanOptions {
   builder: WrappedBuilder<[ESObject]>;
   builderArgs: ESObject;
+  hide?: boolean,
 }
 
 export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
   constructor(options: WidgetSpanOptions) {
     super(options)
+    this.actualText = this.actualText ?? PlaceholderSpan.placeholder;
     this.builder = options.builder;
     this.builderArgs = options.builderArgs;
+    this.range = {
+      start: options.start,
+      end: options.start != undefined ? options.start + this.actualText!.length : undefined
+    };
+    this.hide = options.hide ?? false;
   }
 
   builder: WrappedBuilder<[ESObject]>;
   builderArgs: ESObject;
+  hide: boolean;
 
   build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void {
     if (builder.placeholderCount >= dimensions.length) {
@@ -31,8 +39,8 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
     }
     let currentDimensions = dimensions[builder.placeholderCount];
     builder.addPlaceholder({
-      width: currentDimensions.width,
-      height: currentDimensions.height,
+      width: this.hide ? 0 : currentDimensions.width,
+      height: this.hide ? 0 : currentDimensions.height,
       align: this.align,
       baseline: this.baseline,
       baselineOffset: this.baselineOffset,
@@ -56,12 +64,10 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
     let list = new Array<WidgetSpan>();
     inlineSpan.visitChildren((child) => {
       if (child instanceof WidgetSpan) {
-
         list.push(child);
       }
       return true;
     })
-
     return list;
   }
 }

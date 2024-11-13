@@ -10,19 +10,30 @@ function buildEmojiText(builderArgs: ESObject) {
 export class EmojiText extends extended_text.SpecialText {
   static flag: string = '[';
 
-  constructor(textStyle?: text.TextStyle, start?: number,) {
-    super(EmojiText.flag, ']', start, textStyle);
+  constructor(context: Context, start?: number, textStyle?: text.TextStyle,) {
+    super(EmojiText.flag, ']', context, start, textStyle);
   }
 
   finishText(): extended_text.InlineSpan {
     let key = this.toString();
     if (emojiUitl.has(key)) {
       return new WidgetSpan(
-        { builder: wrapBuilder<[ESObject]>(buildEmojiText), builderArgs: emojiUitl.get(key), },
+        {
+          builder: wrapBuilder<[ESObject]>(buildEmojiText),
+          builderArgs: emojiUitl.get(key),
+          actualText: key,
+          start: this.start,
+        },
       );
     }
     return new TextSpan({ text: key, style: this.textStyle });
   }
 }
 
-let emojiUitl: Map<string, string> = new Map([['[love]', 'love.png'], ['[sun_glasses]', 'sun_glasses.png'],]);
+let emojiUitl: Map<string, string> =
+  new Map([
+    ['[love]', 'love.png'],
+    ['[sun_glasses]', 'sun_glasses.png'],
+    ['[40]', '40.png'],
+    ['[candies]', 'candies.png'],]
+  );

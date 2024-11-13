@@ -1,17 +1,28 @@
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
+import { StringBuffer } from "../Utils";
+import { buffer } from "@kit.ArkTS";
 
 
 export interface InlineSpanOptions {
   style?: text.TextStyle;
+  actualText?: string;
+  start?: number;
 }
 
 export abstract class InlineSpan {
   style?: text.TextStyle;
+  actualText?: string;
+  range?: TextRange;
+
+  get isSpecialInlineSpan() {
+    return this.range != undefined && this.actualText != undefined;
+  }
 
   constructor(options: InlineSpanOptions) {
     this.style = options.style;
+    this.actualText = options.actualText;
   }
 
   abstract build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void;
@@ -46,4 +57,21 @@ export abstract class InlineSpan {
   ///  * [visitChildren], which performs preorder traversal on this [InlineSpan]
   ///    if it has content, and all its descendants with content.
   abstract visitDirectChildren(visitor: InlineSpanVisitor): boolean;
+
+  abstract computeToPlainText(buffer: StringBuffer): void;
+
+  textSpanToActualText(): string {
+
+    let buffer = new StringBuffer();
+    this.visitChildren((e) => {
+      if (e.isSpecialInlineSpan) {
+        buffer.write(e.actualText!);
+      } else {
+        e.computeToPlainText(buffer);
+      }
+      return true;
+    });
+
+    return buffer.value;
+  }
 }

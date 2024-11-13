@@ -6,21 +6,19 @@ import { text } from "@kit.ArkGraphics2D"
 export class DollarText extends extended_text.SpecialText {
   static flag: string = '$';
 
-  constructor(textStyle?: text.TextStyle, start?: number,) {
-    super(DollarText.flag, DollarText.flag, start, textStyle);
+  constructor(context: Context, start?: number, textStyle?: text.TextStyle,) {
+    super(DollarText.flag, DollarText.flag, context, start, textStyle);
   }
 
   finishText(): extended_text.InlineSpan {
     let text = this.getContent();
     return new TextSpan({
-      text: text, style: {
-        fontSize: vp2px(18), color: {
-          alpha: 255,
-          red: 255,
-          green: 152,
-          blue: 0,
-        }
-      }
+      text: text,
+      style: {
+        fontSize: vp2px(18), color: extended_text.ColorUtils.resourceColorTo2DColor(Color.Orange),
+      },
+      actualText: this.toString(),
+      start: this.start,
     });
   }
 }

@@ -25,16 +25,7 @@ export struct ExtendedText {
       ExtendedParagraph({
         overflowWidget: this.overflowWidget,
         paragraphStyle: this.paragraphStyle,
-        text: this.specialTextSpanBuilder != undefined && this.text != undefined ? this.specialTextSpanBuilder.build(
-          this.text!,
-          this.paragraphStyle?.textStyle,
-        ) :
-          new TextSpan(
-            {
-              text: this.text,
-              children: this.textSpan != undefined ? [this.textSpan] : [],
-              style: this.paragraphStyle?.textStyle,
-            }),
+        text: this._buildTextSpan(),
         onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
           this.myNodeController.clearNodes();
           let node = new MyRenderNode(paragraph, overflowClipRects);
@@ -45,9 +36,27 @@ export struct ExtendedText {
           this.myNodeController.addNode(node);
         }
       }).align(Alignment.Top).width('100%')
-    }.onSizeChange((event) => {
-      console.log(JSON.stringify(event));
-    })
+    }
+  }
+
+  _buildTextSpan(): TextSpan {
+    if (this.specialTextSpanBuilder != undefined && this.text != undefined) {
+      return this.specialTextSpanBuilder.build(
+        this.text!,
+        getContext(this),
+        this.paragraphStyle?.textStyle,
+      )
+    }
+
+    return new TextSpan(
+      {
+        text:this.text ,
+        children: [
+          ...(this.textSpan == undefined ? [] : [this.textSpan!])
+        ],
+        style: this.paragraphStyle?.textStyle,
+      }
+    );
   }
 }
 
