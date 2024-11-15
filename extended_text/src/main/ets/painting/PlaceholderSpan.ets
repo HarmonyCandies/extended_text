@@ -63,4 +63,8 @@ export abstract class PlaceholderSpan extends InlineSpan {
   computeToPlainText(buffer: StringBuffer): void {
     buffer.write(PlaceholderSpan.placeholder)
   }
+
+  getInlineOffset(): number {
+    return 1;
+  }
 }

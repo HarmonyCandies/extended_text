@@ -125,6 +125,7 @@ export abstract class RegExpSpecialText {
   abstract finishText(
     start: number,
     match: RegExpExecArray,
+    context: Context,
     textStyle?: text.TextStyle,
   ): InlineSpan;
 }
@@ -169,22 +170,45 @@ export abstract class RegExpSpecialTextSpanBuilder extends SpecialTextSpanBuilde
     }
 
     const regExpSpecialText = copyRegExps[0];
+    const regExp = regExpSpecialText.regExp;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null = null;
 
-    data.split(regExpSpecialText.regExp).map((part, index) => {
-      if (index % 2 === 1) { // match
-        const match = regExpSpecialText.regExp.exec(part)!;
-        const matchString = match[0];
-        children.push(
-          regExpSpecialText.finishText(start, match, textStyle,)
+    while ((match = regExp.exec(data)) !== null) {
+      const matchString = match[0];
+      const matchStartIndex = match.index;
+
+      if (matchStartIndex > lastIndex) {
+        const nonMatchPart = data.slice(lastIndex, matchStartIndex);
+        this.buildWithRegExp(
+          nonMatchPart,
+          start,
+          copyRegExps.slice(1),
+          children,
+          context,
+          textStyle
         );
-        start += matchString.length;
-      } else { // non-match
-        if (part.length > 0) {
-          this.buildWithRegExp(part, start, copyRegExps.slice(1), children, context, textStyle,);
-          start += part.length;
-        }
+        start += nonMatchPart.length;
       }
-    });
+
+      children.push(
+        regExpSpecialText.finishText(start, match, context, textStyle)
+      );
+      start += matchString.length;
+      lastIndex = regExp.lastIndex;
+    }
+
+    if (lastIndex < data.length) {
+      const remainingPart = data.slice(lastIndex);
+      this.buildWithRegExp(
+        remainingPart,
+        start,
+        copyRegExps.slice(1),
+        children,
+        context,
+        textStyle
+      );
+    }
   }
 
   // 创建 SpecialText

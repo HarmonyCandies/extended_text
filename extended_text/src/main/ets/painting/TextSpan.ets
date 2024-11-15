@@ -2,7 +2,7 @@ import { InlineSpan, InlineSpanOptions } from "./InlineSpan";
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
-import { StringBuffer } from "../Utils";
+import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
 
 export interface TextSpanOptions extends InlineSpanOptions {
 
@@ -88,5 +88,48 @@ export class TextSpan extends InlineSpan {
         child.computeToPlainText(buffer);
       }
     }
+  }
+
+  getInlineOffset(): number {
+    return this.text?.length ?? 0;
+  }
+
+
+  joinChar(offset: Accumulator, char?: string): InlineSpan {
+    char ??= InlineSpanUtils.zeroWidthSpace;
+
+    let value = this;
+    let actualText = value.actualText;
+
+    let children: Array<InlineSpan> | undefined = undefined;
+    let start = offset.value;
+    let text = value.text;
+    actualText ??= text;
+    if (actualText != null) {
+      actualText = InlineSpanUtils.joinChar(actualText, char);
+      offset.increment(actualText.length);
+    }
+
+    if (text != null) {
+      text = InlineSpanUtils.joinChar(text, char);
+    }
+
+    if (value.children != undefined) {
+      children = [];
+      for (let index = 0; index < value.children.length; index++) {
+        const child = value.children[index];
+        children.push(child.joinChar(offset));
+      }
+    }
+    return new TextSpan(
+      {
+        text: text,
+        children: children,
+        style: this.style,
+        actualText: actualText,
+        start: start,
+
+      }
+    );
   }
 }

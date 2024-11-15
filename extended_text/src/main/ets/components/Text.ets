@@ -1,62 +1,101 @@
 import { TextOverflowWidget } from '../TextOverflowWidget';
 import { text, common2D } from "@kit.ArkGraphics2D"
-import { image } from '@kit.ImageKit';
 import { drawing } from '@kit.ArkGraphics2D'
 import { InlineSpan } from '../painting/InlineSpan';
 import { ExtendedParagraph } from './Paragraph';
 import { TextSpan } from '../painting/TextSpan';
 import { FrameNode, NodeController, RenderNode } from '@kit.ArkUI';
 import { SpecialTextSpanBuilder } from '../SpecialTextSpanBuilder';
+import { Accumulator } from '../Utils';
 
 @Component
 export struct ExtendedText {
-  overflowWidget?: TextOverflowWidget;
-  paragraphStyle?: text.ParagraphStyle;
-  private onReady: boolean = false;
-  paragraph: text.Paragraph | undefined = undefined;
-  text?: string;
+  @Prop overflowWidget?: TextOverflowWidget;
+  @Prop paragraphStyle?: text.ParagraphStyle;
+  @Watch('reBuildTextSpan') @Prop specialTextSpanBuilder?: SpecialTextSpanBuilder;
+  @Watch('reBuildTextSpan') @Prop text?: string;
+  @Watch('reBuildTextSpan') @Prop textSpan?: InlineSpan;
+  @Watch('reBuildTextSpan') @Prop joinZeroWidthSpace: boolean = false;
+  private _building: boolean = false;
   private myNodeController: MyNodeController = new MyNodeController()
-  textSpan?: InlineSpan;
-  specialTextSpanBuilder?: SpecialTextSpanBuilder;
+
+  reBuildTextSpan(propName: string) {
+    if (!this._building) {
+      this.myNodeController.clearNodes();
+      this._building = true;
+      this._refreshTag = !this._refreshTag;
+    }
+  }
+
+  @State private _refreshTag: boolean = false;
 
   build() {
     Stack() {
       NodeContainer(this.myNodeController)
-      ExtendedParagraph({
-        overflowWidget: this.overflowWidget,
-        paragraphStyle: this.paragraphStyle,
-        text: this._buildTextSpan(),
-        onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
-          this.myNodeController.clearNodes();
-          let node = new MyRenderNode(paragraph, overflowClipRects);
-          node.size = {
-            width: paragraph.getMaxWidth(),
-            height: paragraph.getHeight(),
+      if (this._refreshTag) {
+        ExtendedParagraph({
+          overflowWidget: this.overflowWidget,
+          paragraphStyle: this.paragraphStyle,
+          text: this._buildTextSpan(),
+          onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
+            this.myNodeController.clearNodes();
+            let node = new MyRenderNode(paragraph, overflowClipRects);
+
+            node.size = {
+              width: paragraph.getMaxWidth(),
+              height: paragraph.getHeight(),
+            }
+            this.myNodeController.addNode(node);
+            this._building = false;
           }
-          this.myNodeController.addNode(node);
-        }
-      }).align(Alignment.Top).width('100%')
+        }).align(Alignment.Top).width('100%')
+      } else {
+        ExtendedParagraph({
+          overflowWidget: this.overflowWidget,
+          paragraphStyle: this.paragraphStyle,
+          // refreshTag: this._refreshTag,
+          text: this._buildTextSpan(),
+          onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
+            this.myNodeController.clearNodes();
+            let node = new MyRenderNode(paragraph, overflowClipRects);
+
+            node.size = {
+              width: paragraph.getMaxWidth(),
+              height: paragraph.getHeight(),
+            }
+            this.myNodeController.addNode(node);
+            this._building = false;
+          }
+        }).align(Alignment.Top).width('100%')
+      }
     }
   }
 
   _buildTextSpan(): TextSpan {
+    let innerTextSpan: TextSpan | null = null;
     if (this.specialTextSpanBuilder != undefined && this.text != undefined) {
-      return this.specialTextSpanBuilder.build(
+      innerTextSpan = this.specialTextSpanBuilder.build(
         this.text!,
         getContext(this),
         this.paragraphStyle?.textStyle,
       )
     }
-
-    return new TextSpan(
+    innerTextSpan ??= new TextSpan(
       {
-        text:this.text ,
+        text: this.text,
         children: [
           ...(this.textSpan == undefined ? [] : [this.textSpan!])
         ],
         style: this.paragraphStyle?.textStyle,
       }
     );
+
+    if (this.joinZeroWidthSpace) {
+      innerTextSpan =
+        innerTextSpan.joinChar(new Accumulator()) as TextSpan;
+    }
+
+    return innerTextSpan;
   }
 }
 
@@ -116,6 +155,7 @@ class MyNodeController extends NodeController {
     const renderNode = this.rootNode.getRenderNode()
     if (renderNode != null) {
       // renderNode.size =  node.size;
+      // let xxx= renderNode.size;
       renderNode.appendChild(node)
     }
   }

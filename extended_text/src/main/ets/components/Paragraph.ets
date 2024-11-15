@@ -7,20 +7,23 @@ import { image } from '@kit.ImageKit';
 import { drawing } from '@kit.ArkGraphics2D'
 import { ExtendedParagraphBuilder } from '../ParagraphBuilder';
 import { RectUtils } from '../Utils';
-import { Accumulator, InlineSpan, safeToStringFromRunes } from '../../../../Index';
+import { Accumulator, debounce, InlineSpan, InlineSpanUtils } from '../../../../Index';
 import { inspector } from '@kit.ArkUI';
 
 @Component
 export struct ExtendedParagraph {
+  // @Prop @Watch('onRebuild')
   paragraphStyle?: text.ParagraphStyle;
+  // @Prop @Watch('onRebuild')
   overflowWidget?: TextOverflowWidget;
+  // @Prop @Watch('onRebuild')
   text: TextSpan = new TextSpan({});
-  _overflowOffset: common2D.Point = { x: 0, y: 0 };
-  private _paragraph: text.Paragraph | undefined = undefined;
   onDrawText: (paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>) => void = () => {
   };
-  _overflowWidgetRect: common2D.Rect | null = null;
-  _hideWidgets: Array<number> = [];
+  private _paragraph: text.Paragraph | undefined = undefined;
+  private _overflowWidgetRect: common2D.Rect | null = null;
+  private _hideWidgets: Array<number> = [];
+  private _overflowClipRects: Array<common2D.Rect> = [];
 
   @Builder
   builder() {
@@ -30,20 +33,37 @@ export struct ExtendedParagraph {
     })
   };
 
+  aboutToAppear(): void {
+    if (this.onDrawText != undefined && this._paragraph != undefined) {
+      this.onDrawText(this._paragraph, this._overflowClipRects);
+    }
+  }
+
   build() {
     this.builder()
   }
 
   onPlaceChildren(selfLayoutInfo: GeometryInfo, children: Array<Layoutable>, constraint: ConstraintSizeOptions) {
+    if (children.length == 0) {
+      return;
+    }
+
     let paragraph = this._paragraph!;
     let rects = paragraph.getRectsForPlaceholders();
     let index = 0;
+
     for (; index < rects.length; index++) {
-      const rect = rects[index].rect;
+      let rect = rects[index].rect;
+      rect = {
+        left: px2vp(rect.left),
+        right: px2vp(rect.right),
+        top: px2vp(rect.top),
+        bottom: px2vp(rect.bottom),
+      }
       let child = children[index];
       let margin = child.getMargin();
-      let x = px2vp(rect.left - margin.start);
-      let y = px2vp(rect.top - margin.top);
+      let x = rect.left - margin.start;
+      let y = rect.top - margin.top;
 
       if ((this._overflowWidgetRect != null && RectUtils.hasIntersection(rect, this._overflowWidgetRect!)) ||
         // hide widget
@@ -73,8 +93,16 @@ export struct ExtendedParagraph {
 
   onMeasureSize(selfLayoutInfo: GeometryInfo, children: Array<Measurable>,
     constraint: ConstraintSizeOptions): SizeResult {
+
     this._overflowWidgetRect = null;
     this._hideWidgets.splice(0, this._hideWidgets.length);
+
+    if (children.length == 0) {
+      return {
+        width: constraint.maxWidth as number,
+        height: constraint.maxHeight as number,
+      };
+    }
     let fontCollection = new text.FontCollection();
     let paragraphGraphBuilder = new ExtendedParagraphBuilder({
       textStyle: this.paragraphStyle?.textStyle,
@@ -92,15 +120,8 @@ export struct ExtendedParagraph {
     let dimensions = new Array<MeasureResult>();
     for (; index < childCount; index++) {
       const child = children[index];
-      let childResult: MeasureResult = child.measure({
-        minHeight: constraint.minHeight,
-        minWidth: constraint.minWidth,
-        maxWidth: constraint.maxWidth,
-        maxHeight: constraint.maxHeight
-      })
+      let childResult: MeasureResult = child.measure({})
       let margin = child.getMargin();
-      let padding = child.getPadding();
-      let borderWidth = child.getBorderWidth();
       dimensions.push({
         width: vp2px(childResult.width + margin.start + margin.end),
         height: vp2px(childResult.height + margin.top + margin.bottom),
@@ -116,22 +137,16 @@ export struct ExtendedParagraph {
     if (didVisualOverflow && this.overflowWidget != undefined && position != TextOverflowPosition.end) {
       let start = 0;
       let end = 0;
+      const child = children[children.length-1];
+      let overflowRect = this._getOverflowRect(paragraph, child);
+      end = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
+        overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
+        .position;
+      end = this.text.convertTextPainterPostionToTextInputPostion(end);
       switch (position) {
         case TextOverflowPosition.middle:
-          start = paragraph.getGlyphPositionAtCoordinate(vp2px(maxWidth) / 2, vp2px(constraint.minHeight as number) / 2)
-            .position;
-          end = start + 1;
-          break;
-        case TextOverflowPosition.start:
-          const child = children[children.length-1];
-          let childResult = child.measure({})
-          let margin = child.getMargin();
-          let overflowWidgetSize: MeasureResult = {
-            width: vp2px((childResult.width + margin.start + margin.end)),
-            height: vp2px((childResult.height + margin.top + margin.bottom)),
-          };
-          end = paragraph.getGlyphPositionAtCoordinate(overflowWidgetSize.width, overflowWidgetSize.height / 2)
-            .position;
+          start = end;
+          end += 1;
           break;
       }
 
@@ -149,11 +164,11 @@ export struct ExtendedParagraph {
     }
 
 
-    let overflowClipRects: Array<common2D.Rect> = [];
+    this._overflowClipRects = [];
     if (this.overflowWidget != undefined) {
       const child = children[children.length-1];
       if (didVisualOverflow) {
-        overflowClipRects.push(...this._setOverflowRect(paragraph, child));
+        this._overflowClipRects.push(...this._setOverflowRect(paragraph, child));
       } else {
         // not render
         child.measure({
@@ -165,7 +180,7 @@ export struct ExtendedParagraph {
       }
     }
 
-    this.onDrawText(paragraph, overflowClipRects);
+    this.onDrawText(paragraph, this._overflowClipRects);
     this._paragraph = paragraph;
     return {
       width: maxWidth,
@@ -174,11 +189,10 @@ export struct ExtendedParagraph {
 
   }
 
-  _setOverflowRect(paragraph: text.Paragraph,
-    overflowWidget: Measurable,): Array<common2D.Rect> {
+  _getOverflowRect(paragraph: text.Paragraph,
+    overflowWidget: Measurable,): common2D.Rect {
     let position = this.overflowWidget?.position;
     let textWidth = paragraph.getMaxWidth();
-    let textHeight = paragraph.getHeight();
     let margin = overflowWidget.getMargin();
 
     let childResult = overflowWidget.measure({})
@@ -207,7 +221,7 @@ export struct ExtendedParagraph {
       }
         break;
       case TextOverflowPosition.middle: {
-        let lineNum = Math.ceil(lines.length / 2) - 1;
+        let lineNum = Math.floor(lines.length / 2);
         let isEven = lines.length % 2 === 0;
         line = lines[lineNum];
 
@@ -215,9 +229,9 @@ export struct ExtendedParagraph {
 
         if (isEven) {
           overflowWidgetRect = {
-            left: textWidth - overflowWidgetSize.width,
+            left: 0,
             top: lineCenter - overflowWidgetSize.height / 2,
-            right: textWidth,
+            right: overflowWidgetSize.width,
             bottom: lineCenter + overflowWidgetSize.height / 2,
           }
         } else {
@@ -243,9 +257,22 @@ export struct ExtendedParagraph {
       }
         break;
     }
-    let left = paragraph.getGlyphPositionAtCoordinate(overflowWidgetRect.left,
+    return overflowWidgetRect;
+  }
+
+  _setOverflowRect(paragraph: text.Paragraph,
+    overflowWidget: Measurable,): Array<common2D.Rect> {
+    let childResult = overflowWidget.measure({})
+    let margin = overflowWidget.getMargin();
+    let overflowWidgetRect: common2D.Rect = this._getOverflowRect(paragraph, overflowWidget);
+    let overflowWidgetSize: MeasureResult = {
+      width: vp2px((childResult.width + margin.start + margin.end)),
+      height: vp2px((childResult.height + margin.top + margin.bottom)),
+    };
+    let x = (overflowWidgetRect.right - overflowWidgetRect.left) / 10;
+    let left = paragraph.getGlyphPositionAtCoordinate(overflowWidgetRect.left - x,
       overflowWidgetRect.top + overflowWidgetSize.height / 2);
-    let right = paragraph.getGlyphPositionAtCoordinate(overflowWidgetRect.right,
+    let right = paragraph.getGlyphPositionAtCoordinate(overflowWidgetRect.right + x,
       overflowWidgetRect.top + overflowWidgetSize.height / 2);
 
     let range: text.Range = { start: left.position, end: right.position };
@@ -395,7 +422,7 @@ export struct ExtendedParagraph {
 
         // 将字符码点数组转换回字符串
         // 😀 小心被裁剪之后不合法的乱码
-        text = safeToStringFromRunes(finallyRunes);
+        text = InlineSpanUtils.safeToStringFromRunes(finallyRunes);
         // text = String.fromCodePoint(...finallyRunes);
       }
 
@@ -416,9 +443,10 @@ export struct ExtendedParagraph {
       output = new TextSpan(
         {
           text: text,
-          actualText: actualText,
           children: children,
+          style: value.style,
           start: start,
+          actualText: actualText,
         }
       );
     } else if (value instanceof WidgetSpan) {
@@ -427,6 +455,12 @@ export struct ExtendedParagraph {
         builder: value.builder,
         builderArgs: value.builderArgs,
         hide: hide,
+        align: value.align,
+        baseline: value.baseline,
+        baselineOffset: value.baselineOffset,
+        start: value.start,
+        style: value.style,
+        actualText: value.actualText,
       })
       if (hide) {
         hideWidgets.push(hideWidgetIndex.value);
@@ -440,3 +474,4 @@ export struct ExtendedParagraph {
     return output!;
   }
 }
+

@@ -1,8 +1,11 @@
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
-import { StringBuffer } from "../Utils";
+import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
 import { buffer } from "@kit.ArkTS";
+import { TextSpan } from "./TextSpan";
+import { PlaceholderSpan } from "./PlaceholderSpan";
+import { WidgetSpan } from "./WidgetSpan";
 
 
 export interface InlineSpanOptions {
@@ -15,6 +18,14 @@ export abstract class InlineSpan {
   style?: text.TextStyle;
   actualText?: string;
   range?: TextRange;
+
+  get start(): number {
+    return this.range!.start!;
+  }
+
+  get end(): number {
+    return this.range!.end!;
+  }
 
   get isSpecialInlineSpan() {
     return this.range != undefined && this.actualText != undefined;
@@ -74,4 +85,46 @@ export abstract class InlineSpan {
 
     return buffer.value;
   }
+
+  convertTextPainterPostionToTextInputPostion(textPosition: number): number {
+    let caretOffset = textPosition;
+    if (caretOffset <= 0) {
+      return caretOffset;
+    }
+
+    let textOffset = 0;
+    this.visitChildren((ts: InlineSpan) => {
+      if (ts.isSpecialInlineSpan) {
+        let length = ts.actualText!.length;
+        caretOffset += length - ts.getInlineOffset();
+        ///make sure caret is not in text when deleteAll is true
+        if (
+          caretOffset >= ts.start &&
+            caretOffset <= ts.end) {
+          if (caretOffset >
+            (ts.end - ts.start) / 2.0 + ts.start) {
+            // move caretOffset to end
+            caretOffset = ts.end;
+          } else {
+            caretOffset = ts.start;
+          }
+          return false;
+        }
+      }
+
+      textOffset += ts.getInlineOffset();
+      if (textOffset >= textPosition) {
+        return false;
+      }
+      return true;
+    })
+
+    return caretOffset;
+  }
+
+  abstract getInlineOffset(): number;
+
+
+  abstract joinChar(offset: Accumulator, char?: string): InlineSpan;
+
 }

@@ -3,8 +3,8 @@ import { TextSpan, WidgetSpan } from '@candies/extended_text';
 import { text } from "@kit.ArkGraphics2D"
 
 @Builder
-function buildEmojiText(builderArgs: ESObject) {
-  Image($rawfile(builderArgs as string)).width(20).height(20).margin(5)
+export function buildEmojiText(builderArgs: ESObject) {
+  Image($rawfile(builderArgs as string)).width(20).height(20).margin({ left: 5, right: 5,})
 }
 
 export class EmojiText extends extended_text.SpecialText {

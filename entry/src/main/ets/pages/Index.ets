@@ -1,117 +1,65 @@
-import { drawing } from '@kit.ArkGraphics2D'
-import { text } from "@kit.ArkGraphics2D"
-import { common2D } from "@kit.ArkGraphics2D"
-import { image } from '@kit.ImageKit';
-import { ColorUtils, ExtendedText, TextSpan } from '@candies/extended_text'
-import * as extended_text from '@candies/extended_text'
-import { MySpecialTextSpanBuilder } from '../text/MySpecialTextSpanBuilder';
-import { promptAction } from '@kit.ArkUI';
+import router from '@ohos.router'
+import { CustomTextOverflowDemo } from './CustomTextOverflowDemo';
+import { RegexpTextDemo } from './RegexpTextDemo';
+import { TextDemo } from './TextDemo';
 
-@Builder
-function buildTextOverflowWidget(builderArgs: ESObject) {
-  Row() {
-    Text("\u2026")
-    Image($rawfile('candies.png')).width(20).height(20)
-  }
-  .alignItems(VerticalAlign.Center)
-  .onClick(() => {
-    (builderArgs as () => void)();
-  })
-}
 
 @Entry
 @Component
 struct Index {
-  private specialTextSpanBuilder: MySpecialTextSpanBuilder = new MySpecialTextSpanBuilder();
-  context: Context = getContext(this);
-  content: string =
-    "[love]😀Extended text help you to build rich text quickly.[40] any special text you will have with extended text." +
-      "It\'s my pleasure to invite you to join $HarmonyCandies$ if you want to make harmony better.[love]" +
-      "'if you meet any problem, please let me know @zmtzawqlp ."
+  title: string = 'extended_text demo';
+  pages: Array<PageInfo> = [
+    {
+      description: '展示如何快速创建特殊文本',
+      route: 'TextDemo',
+    },
+    {
+      description: '展示如何自定义文本溢出效果',
+      route: 'CustomTextOverflowDemo',
+    },
+    {
+      description: '展示如何利用正则表达式快速创建特殊文本',
+      route: 'RegexpTextDemo',
+    },
+  ]
+  @Provide('pageInfos') pageInfos: NavPathStack = new NavPathStack()
 
-  aboutToAppear() {
-
-  }
-  build() {
-    Column() {
-      Text() {
-        Span('  123 Hello World !   ').fontSize('10fp').fontColor(Color.Blue)
-        ContainerSpan() {
-          ImageSpan($r('app.media.app_icon'))
-            .width('40vp')
-            .height('40vp')
-            .verticalAlign(ImageSpanAlignment.CENTER)
-          Span('   Hello World !   ').fontSize('16fp').fontColor(Color.White)
-        }.textBackgroundStyle({ color: "#7F007DFF", radius: "12vp" })
-
-        Span('  456 Hello World !   ').fontSize('10fp').fontColor(Color.Blue)
-      }
-
-      Column().backgroundColor(Color.Blue).width(50).height(50)
-      Row().width(100).height(100).backgroundColor(Color.Blue)
-
-      ExtendedText({
-        text: this.content,
-        specialTextSpanBuilder: this.specialTextSpanBuilder,
-        overflowWidget: new extended_text.TextOverflowWidget(
-          {
-            builder: wrapBuilder(buildTextOverflowWidget),
-            position: extended_text.TextOverflowPosition.start,
-            builderArgs: this.onTextOverflowWidgetClick,
-          }
-        ),
-        paragraphStyle: {
-          textStyle: {
-            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
-            fontSize: vp2px(18),
-          },
-          maxLines: 4,
-        },
-      })
-      ExtendedText({
-        text: this.content,
-        specialTextSpanBuilder: this.specialTextSpanBuilder,
-        overflowWidget: new extended_text.TextOverflowWidget(
-          {
-            builder: wrapBuilder(buildTextOverflowWidget),
-            position: extended_text.TextOverflowPosition.middle,
-            builderArgs: this.onTextOverflowWidgetClick,
-          }
-        ),
-        paragraphStyle: {
-          textStyle: {
-            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
-            fontSize: vp2px(18),
-          },
-          maxLines: 4,
-        },
-      }).margin({
-        top: 50,
-      })
-      ExtendedText({
-        text: this.content,
-        specialTextSpanBuilder: this.specialTextSpanBuilder,
-        overflowWidget: new extended_text.TextOverflowWidget(
-          {
-            builder: wrapBuilder(buildTextOverflowWidget),
-            position: extended_text.TextOverflowPosition.end,
-            builderArgs: this.onTextOverflowWidgetClick,
-          }
-        ),
-        paragraphStyle: {
-          textStyle: {
-            color: ColorUtils.resourceColorTo2DColor($r('sys.color.brand'), this.context),
-            fontSize: vp2px(18),
-          },
-          maxLines: 4,
-        },
-      }).margin({
-        top: 50,
-      })
+  @Builder
+  PageMap(name: string) {
+    if (name === 'TextDemo') {
+      TextDemo()
+    } else if (name === 'CustomTextOverflowDemo') {
+      CustomTextOverflowDemo()
+    } else if (name === 'RegexpTextDemo') {
+      RegexpTextDemo()
     }
   }
 
-  onTextOverflowWidgetClick(): void {
-    promptAction.showToast({ message: '点击溢出文本', alignment: Alignment.Center, })
+  build() {
+    Navigation(this.pageInfos) {
+      Column() {
+        Text(`${this.title}`)
+        List() {
+          ForEach(this.pages, (item: PageInfo, index) => {
+            ListItem() {
+              Text(`${index + 1}. ${item.description}`).onClick((x) => {
+                this.pageInfos.pushPath({
+                  name: item.route
+                })
+
+              }).margin(10)
+            }.width('100%').align(Alignment.Start)
+          })
+        }.divider({ strokeWidth: 1, color: Color.Gray }).margin({ top: 10 })
+      }
+      .width('100%').height('100%')
+    }.navDestination(this.PageMap)
   }
 }
+
+interface PageInfo {
+  description: string;
+  route: string;
+}
+
+

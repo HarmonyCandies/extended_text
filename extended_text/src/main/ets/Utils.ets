@@ -1,5 +1,9 @@
 import { text, common2D } from "@kit.ArkGraphics2D"
 import { BusinessError } from "@kit.BasicServicesKit";
+import { InlineSpan } from "./painting/InlineSpan";
+import { PlaceholderSpan } from "./painting/PlaceholderSpan";
+import { TextSpan } from "./painting/TextSpan";
+import { WidgetSpan } from "./painting/WidgetSpan";
 
 class UnsupportedOperationException implements BusinessError {
   code: number;
@@ -194,44 +198,117 @@ export class StringBuffer {
 }
 
 
-export function safeSubstring(text: string, start: number, end: number): string {
-  const characters = Array.from(
-    text.matchAll(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g),
-    (match) => match[0]
-  );
+export class InlineSpanUtils {
+  static zeroWidthSpace: string = '\u{200B}';
 
-  const safeStart = Math.min(start, characters.length);
-  const safeEnd = Math.min(end, characters.length);
-
-  return characters.slice(safeStart, safeEnd).join("");
-}
-
-export function safeToStringFromRunes(runes: number[]): string {
-  const safeRunes: number[] = [];
-
-  let i = 0;
-  while (i < runes.length) {
-    const currentRune = runes[i];
-
-    // 如果当前字符是高代理项（D800..DBFF）
-    if (currentRune >= 0xD800 && currentRune <= 0xDBFF) {
-      // 检查下一个字符是否是低代理项（DC00..DFFF）
-      if (i + 1 < runes.length && runes[i + 1] >= 0xDC00 && runes[i + 1] <= 0xDFFF) {
-        // 如果是完整的代理对，添加到结果数组
-        safeRunes.push(currentRune, runes[i + 1]);
-        i += 2; // 跳过这两个字符
-      } else {
-        // 如果只有高代理项，丢弃这个字符
-        i++;
-      }
-    } else {
-      // 如果当前字符不是代理对，直接添加到结果数组
-      safeRunes.push(currentRune);
-      i++;
-    }
+  static joinChar(content: string, char?: string): string {
+    char ??= InlineSpanUtils.zeroWidthSpace;
+    return content.split('').join(char);
   }
 
-  // 将有效的 Unicode 码点转换为字符串
-  return String.fromCodePoint(...safeRunes);
+  static safeSubstring(text: string, start: number, end: number): string {
+    const characters = Array.from(
+      text.matchAll(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g),
+      (match) => match[0]
+    );
+
+    const safeStart = Math.min(start, characters.length);
+    const safeEnd = Math.min(end, characters.length);
+
+    return characters.slice(safeStart, safeEnd).join("");
+  }
+
+  static safeToStringFromRunes(runes: number[]): string {
+    const safeRunes: number[] = [];
+
+    let i = 0;
+    while (i < runes.length) {
+      const currentRune = runes[i];
+
+      // 如果当前字符是高代理项（D800..DBFF）
+      if (currentRune >= 0xD800 && currentRune <= 0xDBFF) {
+        // 检查下一个字符是否是低代理项（DC00..DFFF）
+        if (i + 1 < runes.length && runes[i + 1] >= 0xDC00 && runes[i + 1] <= 0xDFFF) {
+          // 如果是完整的代理对，添加到结果数组
+          safeRunes.push(currentRune, runes[i + 1]);
+          i += 2; // 跳过这两个字符
+        } else {
+          // 如果只有高代理项，丢弃这个字符
+          i++;
+        }
+      } else {
+        // 如果当前字符不是代理对，直接添加到结果数组
+        safeRunes.push(currentRune);
+        i++;
+      }
+    }
+
+    // 将有效的 Unicode 码点转换为字符串
+    return String.fromCodePoint(...safeRunes);
+  }
+
+  // static inlineSpanJoinChar(value: InlineSpan, offset: Accumulator, char?: string): InlineSpan {
+  //   char ??= InlineSpanUtils.zeroWidthSpace;
+  //   let output: InlineSpan;
+  //   let actualText = value.actualText;
+  //   if (value instanceof TextSpan) {
+  //     let children: Array<InlineSpan> | undefined = undefined;
+  //     let start = offset.value;
+  //     let text = value.text;
+  //     actualText ??= text;
+  //     if (actualText != null) {
+  //       actualText = InlineSpanUtils.joinChar(actualText,char);
+  //       offset.increment(actualText.length);
+  //     }
+  //
+  //     if (text != null) {
+  //       text = InlineSpanUtils.joinChar(text,char);
+  //     }
+  //
+  //     if (value.children != undefined) {
+  //       children = [];
+  //       for (let index = 0; index < value.children.length; index++) {
+  //         const child = value.children[index];
+  //         children.push(InlineSpanUtils.inlineSpanJoinChar(child,offset));
+  //       }
+  //     }
+  //
+  //     output = new TextSpan(
+  //       {
+  //         text: text,
+  //         actualText: actualText,
+  //         children: children,
+  //         start: start,
+  //       }
+  //     );
+  //   } else if (value instanceof WidgetSpan) {
+  //     output = new WidgetSpan({
+  //       builder: value.builder,
+  //       builderArgs: value.builderArgs,
+  //       hide: value.hide,
+  //     })
+  //     offset.increment(actualText?.length ?? 1);
+  //   } else {
+  //     output = value;
+  //   }
+  //
+  //   return output!;
+  // }
 }
 
+export function debounce(
+  fn: () => void,
+  duration: number
+): () => void {
+  let timeout: number | null = null;
+
+  return () => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => {
+      timeout = null;
+      fn();
+    }, duration);
+  }
+}

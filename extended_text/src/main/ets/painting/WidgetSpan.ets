@@ -3,7 +3,7 @@ import { text } from "@kit.ArkGraphics2D"
 import { WidgetBuilder } from "../WidgetBuilder";
 import { ImageModifier } from "@kit.ArkUI";
 import { InlineSpanVisitor } from "../Declare";
-import { InlineSpan } from "../../../../Index";
+import { Accumulator, InlineSpan } from "../../../../Index";
 import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
 
 export interface WidgetSpanOptions extends PlaceholderSpanOptions {
@@ -69,5 +69,20 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
       return true;
     })
     return list;
+  }
+
+  joinChar(offset: Accumulator, char?: string): InlineSpan {
+    offset.increment(this.actualText?.length ?? 1);
+    return new WidgetSpan({
+      builder: this.builder,
+      builderArgs: this.builderArgs,
+      hide: this.hide,
+      align: this.align,
+      baseline: this.baseline,
+      baselineOffset: this.baselineOffset,
+      start: this.start,
+      style: this.style,
+      actualText: this.actualText,
+    });
   }
 }
