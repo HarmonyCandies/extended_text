@@ -5,7 +5,6 @@ import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
 import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
 
 export interface TextSpanOptions extends InlineSpanOptions {
-
   text?: string;
   children?: Array<InlineSpan>;
 }

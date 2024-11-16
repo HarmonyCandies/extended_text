@@ -1,4 +1,4 @@
-import { RegExpSpecialText, RegExpSpecialTextSpanBuilder } from '@candies/extended_text';
+import { RegExpSpecialTextSpanBuilder } from '@candies/extended_text';
 import { RegExpEmojiText } from './EmojiText';
 import { RegExpDollarText } from './DollarText';
 import { RegExpLinkText } from './LinkText';
