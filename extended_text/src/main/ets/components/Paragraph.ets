@@ -138,17 +138,29 @@ export struct ExtendedParagraph {
       let start = 0;
       let end = 0;
       const child = children[children.length-1];
-      let overflowRect = this._getOverflowRect(paragraph, child);
-      end = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
-        overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
-        .position;
-      end = this.text.convertTextPainterPostionToTextInputPostion(end);
-      switch (position) {
-        case TextOverflowPosition.middle:
-          start = end;
-          end += 1;
-          break;
-      }
+
+      // if (true) {
+      let copy = paragraphGraphBuilder.copy();
+      this.text.build(copy, dimensions);
+      let oneLineParagraph = copy.build();
+      oneLineParagraph.layoutSync(Infinity);
+      let estimatedCropRange = this._getEstimatedCropRange(paragraph, oneLineParagraph, child);
+      start = estimatedCropRange.start!;
+      end = estimatedCropRange.end!;
+      // }
+      // else{
+      //   let overflowRect = this._getOverflowRect(paragraph, child);
+      //   end = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
+      //     overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
+      //     .position;
+      //   end = this.text.convertTextPainterPostionToTextInputPostion(end);
+      //   switch (position) {
+      //     case TextOverflowPosition.middle:
+      //       start = end;
+      //       end += 1;
+      //       break;
+      //   }
+      // }
 
       start = Math.min(start, end);
       end = Math.max(start, end);
@@ -187,6 +199,90 @@ export struct ExtendedParagraph {
       height: px2vp(paragraph.getHeight()),
     };
 
+  }
+
+  _getEstimatedCropRange(paragraph: text.Paragraph, oneLineParagraph: text.Paragraph,
+    overflowWidget: Measurable,): TextRange {
+
+    let position = this.overflowWidget?.position;
+    let margin = overflowWidget.getMargin();
+    let childResult = overflowWidget.measure({})
+    let overflowWidgetSize: MeasureResult = {
+      width: vp2px((childResult.width + margin.start + margin.end)),
+      height: vp2px((childResult.height + margin.top + margin.bottom)),
+    };
+    let lines = paragraph.getLineMetrics();
+    let maxIntrinsicWidth = oneLineParagraph.getMaxIntrinsicWidth();
+
+    switch (position) {
+      case TextOverflowPosition.start: {
+        for (let index = lines.length - 1; index >= 0; index--) {
+          const line = lines[index];
+          maxIntrinsicWidth -= line.width;
+        }
+        let end =
+          oneLineParagraph.getGlyphPositionAtCoordinate(Math.max(overflowWidgetSize.width, maxIntrinsicWidth),
+            oneLineParagraph.getHeight() / 2).position;
+        return {
+          start: 0,
+          end: this.text.convertTextPainterPostionToTextInputPostion(end),
+        }
+      }
+      case TextOverflowPosition.middle: {
+        let lineNum = Math.floor(lines.length / 2);
+        let isEven = lines.length % 2 === 0;
+        let line = lines[lineNum];
+        let lineCenter = line.topHeight + line.height / 2;
+        let overflowRect: common2D.Rect = {
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+        };
+        let textWidth = paragraph.getMaxWidth();
+        if (isEven) {
+          overflowRect = {
+            left: 0,
+            top: lineCenter - overflowWidgetSize.height / 2,
+            right: overflowWidgetSize.width,
+            bottom: lineCenter + overflowWidgetSize.height / 2,
+          }
+        } else {
+          overflowRect = {
+            left: textWidth / 2 - overflowWidgetSize.width / 2,
+            top: lineCenter - overflowWidgetSize.height / 2,
+            right: textWidth / 2 + overflowWidgetSize.width / 2,
+            bottom: lineCenter + overflowWidgetSize.height / 2,
+          }
+        }
+        let start = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
+          overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
+          .position;
+        start = this.text.convertTextPainterPostionToTextInputPostion(start);
+
+        for (let index = lines.length - 1; index > lineNum; index--) {
+          const line = lines[index];
+          maxIntrinsicWidth -= line.width;
+        }
+
+        maxIntrinsicWidth -= (line.width - overflowRect.right);
+
+        let end =
+          oneLineParagraph.getGlyphPositionAtCoordinate(Math.max(overflowWidgetSize.width, maxIntrinsicWidth),
+            oneLineParagraph.getHeight() / 2).position;
+        end = this.text.convertTextPainterPostionToTextInputPostion(end);
+        return {
+          start: start,
+          end: end,
+        }
+      }
+        break;
+    }
+
+    return {
+      start: 0,
+      end: 0,
+    }
   }
 
   _getOverflowRect(paragraph: text.Paragraph,
