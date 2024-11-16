@@ -5,10 +5,9 @@
 
 
 
-| ![text_demo.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/text_demo.png)                   | ![overflow.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/overflow.png) |
-| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| ![joinZeroWidthSpace.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/joinZeroWidthSpace.png) |
-|                                                                                                                                |
+| ![text_demo.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/text_demo.png) | ![overflow.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/overflow.png) |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+
 
 
 关注公众号 `糖果代码铺` ，获取更多鸿蒙开发资讯.
