@@ -5,7 +5,7 @@ import { InlineSpan } from '../painting/InlineSpan';
 import { ExtendedParagraph } from './Paragraph';
 import { TextSpan } from '../painting/TextSpan';
 import { FrameNode, NodeController, RenderNode } from '@kit.ArkUI';
-import { SpecialTextSpanBuilder } from '../SpecialTextSpanBuilder';
+import { SpecialTextSpanBuilder } from '../builder/SpecialTextSpanBuilder';
 import { Accumulator } from '../Utils';
 
 @Component

@@ -1,4 +1,4 @@
-import { WidgetBuilder } from "./WidgetBuilder";
+import { WidgetBuilder } from "./builder/WidgetBuilder";
 
 export enum TextOverflowPosition {
   start,

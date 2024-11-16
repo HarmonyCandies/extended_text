@@ -1,10 +1,10 @@
 import { PlaceholderSpan, PlaceholderSpanOptions } from "./PlaceholderSpan";
 import { text } from "@kit.ArkGraphics2D"
-import { WidgetBuilder } from "../WidgetBuilder";
+import { WidgetBuilder } from "../builder/WidgetBuilder";
 import { ImageModifier } from "@kit.ArkUI";
 import { InlineSpanVisitor } from "../Declare";
 import { Accumulator, InlineSpan } from "../../../../Index";
-import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
+import { ExtendedParagraphBuilder } from "../builder/ParagraphBuilder";
 
 export interface WidgetSpanOptions extends PlaceholderSpanOptions {
   builder: WrappedBuilder<[ESObject]>;

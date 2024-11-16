@@ -1,6 +1,6 @@
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
-import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
+import { ExtendedParagraphBuilder } from "../builder/ParagraphBuilder";
 import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
 import { buffer } from "@kit.ArkTS";
 import { TextSpan } from "./TextSpan";

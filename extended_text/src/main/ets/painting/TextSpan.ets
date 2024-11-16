@@ -1,7 +1,7 @@
 import { InlineSpan, InlineSpanOptions } from "./InlineSpan";
 import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
-import { ExtendedParagraphBuilder } from "../ParagraphBuilder";
+import { ExtendedParagraphBuilder } from "../builder/ParagraphBuilder";
 import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
 
 export interface TextSpanOptions extends InlineSpanOptions {

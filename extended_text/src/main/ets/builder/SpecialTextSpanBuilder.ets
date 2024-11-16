@@ -1,5 +1,5 @@
-import { InlineSpan } from './painting/InlineSpan';
-import { TextSpan } from './painting/TextSpan';
+import { InlineSpan } from '../painting/InlineSpan';
+import { TextSpan } from '../painting/TextSpan';
 import { text, common2D } from "@kit.ArkGraphics2D"
 
 export abstract class SpecialText {

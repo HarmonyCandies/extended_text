@@ -1,11 +1,11 @@
 import { TextOverflowPosition, TextOverflowWidget } from '../TextOverflowWidget';
 import { TextSpan } from '../painting/TextSpan';
 import { WidgetSpan } from '../painting/WidgetSpan';
-import { WidgetBuilder } from '../WidgetBuilder';
+import { WidgetBuilder } from '../builder/WidgetBuilder';
 import { text, common2D } from "@kit.ArkGraphics2D"
 import { image } from '@kit.ImageKit';
 import { drawing } from '@kit.ArkGraphics2D'
-import { ExtendedParagraphBuilder } from '../ParagraphBuilder';
+import { ExtendedParagraphBuilder } from '../builder/ParagraphBuilder';
 import { RectUtils } from '../Utils';
 import { Accumulator, debounce, InlineSpan, InlineSpanUtils } from '../../../../Index';
 import { inspector } from '@kit.ArkUI';
