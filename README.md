@@ -50,6 +50,8 @@
  | paragraphStyle         | text.ParagraphStyle (import { text } from "@kit.ArkGraphics2D") |       文本的样式       |
  | overflowWidget         |                       TextOverflowWidget                        |    用于定义溢出效果    |
  | specialTextSpanBuilder |                     SpecialTextSpanBuilder                      |    用于创建特殊文本    |
+ | fontCollection         |                       text.FontCollection                       |       自定义字体       |
+ 
 
 ```typescript
 import { ColorUtils, ExtendedText } from '@candies/extended_text'

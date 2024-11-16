@@ -16,6 +16,7 @@ export struct ExtendedParagraph {
   paragraphStyle?: text.ParagraphStyle;
   // @Prop @Watch('onRebuild')
   overflowWidget?: TextOverflowWidget;
+  fontCollection?: text.FontCollection;
   // @Prop @Watch('onRebuild')
   text: TextSpan = new TextSpan({});
   onDrawText: (paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>) => void = () => {
@@ -103,7 +104,7 @@ export struct ExtendedParagraph {
         height: constraint.maxHeight as number,
       };
     }
-    let fontCollection = new text.FontCollection();
+    let fontCollection = this.fontCollection?? new text.FontCollection();
     let paragraphGraphBuilder = new ExtendedParagraphBuilder({
       textStyle: this.paragraphStyle?.textStyle,
       align: this.paragraphStyle?.align ?? text.TextAlign.START,

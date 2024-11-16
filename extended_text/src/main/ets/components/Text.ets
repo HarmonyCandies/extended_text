@@ -12,6 +12,7 @@ import { Accumulator } from '../Utils';
 export struct ExtendedText {
   @Prop overflowWidget?: TextOverflowWidget;
   @Prop paragraphStyle?: text.ParagraphStyle;
+  @Prop fontCollection?: text.FontCollection;
   @Watch('reBuildTextSpan') @Prop specialTextSpanBuilder?: SpecialTextSpanBuilder;
   @Watch('reBuildTextSpan') @Prop text?: string;
   @Watch('reBuildTextSpan') @Prop textSpan?: InlineSpan;
@@ -36,6 +37,7 @@ export struct ExtendedText {
         ExtendedParagraph({
           overflowWidget: this.overflowWidget,
           paragraphStyle: this.paragraphStyle,
+          fontCollection: this.fontCollection,
           text: this._buildTextSpan(),
           onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
             this.myNodeController.clearNodes();
@@ -53,7 +55,7 @@ export struct ExtendedText {
         ExtendedParagraph({
           overflowWidget: this.overflowWidget,
           paragraphStyle: this.paragraphStyle,
-          // refreshTag: this._refreshTag,
+          fontCollection: this.fontCollection,
           text: this._buildTextSpan(),
           onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
             this.myNodeController.clearNodes();
