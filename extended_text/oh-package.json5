@@ -6,14 +6,14 @@
     "overflow",
     "ellipsis",
     "ellipsisMode",
-    "自定义溢出效果",
+    "自定义溢出",
   ],
   "author": "zmtzawqlp",
   "name": "@candies/extended_text",
   "description": "一个文本组件，支持特殊文本效果（比如图片，@人）,自定义文本溢出效果(ellipsis), 多行文本溢出效果位置(ellipsisMode)的支持.",
   "main": "Index.ets",
   "repository": "https://github.com/HarmonyCandies/extended_text",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/HarmonyCandies/extended_text",
   "dependencies": {}
 }

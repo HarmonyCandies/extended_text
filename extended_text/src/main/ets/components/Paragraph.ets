@@ -98,12 +98,6 @@ export struct ExtendedParagraph {
     this._overflowWidgetRect = null;
     this._hideWidgets.splice(0, this._hideWidgets.length);
 
-    if (children.length == 0) {
-      return {
-        width: constraint.maxWidth as number,
-        height: constraint.maxHeight as number,
-      };
-    }
     let fontCollection = this.fontCollection?? new text.FontCollection();
     let paragraphGraphBuilder = new ExtendedParagraphBuilder({
       textStyle: this.paragraphStyle?.textStyle,
