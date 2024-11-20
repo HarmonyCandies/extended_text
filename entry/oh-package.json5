@@ -8,6 +8,7 @@
   "dependencies": {
     '@candies/extended_text': 'file:../extended_text',
     // '@candies/extended_text': 'file:../extended_text.har'
+    "@candies/loading_more_list": "^1.0.3"
   }
 }
 

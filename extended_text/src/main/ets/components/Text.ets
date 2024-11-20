@@ -18,11 +18,11 @@ export struct ExtendedText {
   @Watch('reBuildTextSpan') @Prop textSpan?: InlineSpan;
   @Watch('reBuildTextSpan') @Prop joinZeroWidthSpace: boolean = false;
   private _building: boolean = false;
-  private myNodeController: MyNodeController = new MyNodeController()
+  private _nodeController: _NodeController = new _NodeController()
 
   reBuildTextSpan(propName: string) {
     if (!this._building) {
-      this.myNodeController.clearNodes();
+      this._nodeController.clearNodes();
       this._building = true;
       this._refreshTag = !this._refreshTag;
     }
@@ -32,7 +32,7 @@ export struct ExtendedText {
 
   build() {
     Stack() {
-      NodeContainer(this.myNodeController)
+      NodeContainer(this._nodeController)
       if (this._refreshTag) {
         ExtendedParagraph({
           overflowWidget: this.overflowWidget,
@@ -40,14 +40,14 @@ export struct ExtendedText {
           fontCollection: this.fontCollection,
           text: this._buildTextSpan(),
           onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
-            this.myNodeController.clearNodes();
-            let node = new MyRenderNode(paragraph, overflowClipRects);
+            this._nodeController.clearNodes();
+            let node = new _RenderNode(paragraph, overflowClipRects);
 
             node.size = {
               width: paragraph.getMaxWidth(),
               height: paragraph.getHeight(),
             }
-            this.myNodeController.addNode(node);
+            this._nodeController.addNode(node);
             this._building = false;
           }
         }).align(Alignment.Top).width('100%')
@@ -58,14 +58,14 @@ export struct ExtendedText {
           fontCollection: this.fontCollection,
           text: this._buildTextSpan(),
           onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
-            this.myNodeController.clearNodes();
-            let node = new MyRenderNode(paragraph, overflowClipRects);
+            this._nodeController.clearNodes();
+            let node = new _RenderNode(paragraph, overflowClipRects);
 
             node.size = {
               width: paragraph.getMaxWidth(),
               height: paragraph.getHeight(),
             }
-            this.myNodeController.addNode(node);
+            this._nodeController.addNode(node);
             this._building = false;
           }
         }).align(Alignment.Top).width('100%')
@@ -101,7 +101,7 @@ export struct ExtendedText {
   }
 }
 
-class MyRenderNode extends RenderNode {
+class _RenderNode extends RenderNode {
   constructor(paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>) {
     super();
     this.paragraph = paragraph;
@@ -142,7 +142,7 @@ class MyRenderNode extends RenderNode {
   }
 }
 
-class MyNodeController extends NodeController {
+class _NodeController extends NodeController {
   private rootNode: FrameNode | null = null;
 
   makeNode(uiContext: UIContext): FrameNode {

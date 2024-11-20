@@ -12,12 +12,14 @@ export interface InlineSpanOptions {
   style?: text.TextStyle;
   actualText?: string;
   start?: number;
+  keepVisible?: boolean;
 }
 
 export abstract class InlineSpan {
   style?: text.TextStyle;
   actualText?: string;
   range?: TextRange;
+  keepVisible?: boolean;
 
   get start(): number {
     return this.range!.start!;
@@ -34,6 +36,7 @@ export abstract class InlineSpan {
   constructor(options: InlineSpanOptions) {
     this.style = options.style;
     this.actualText = options.actualText;
+    this.keepVisible = options.keepVisible;
   }
 
   abstract build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void;
@@ -126,5 +129,4 @@ export abstract class InlineSpan {
 
 
   abstract joinChar(offset: Accumulator, char?: string): InlineSpan;
-
 }

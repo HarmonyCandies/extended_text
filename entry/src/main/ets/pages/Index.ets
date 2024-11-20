@@ -1,6 +1,7 @@
 import router from '@ohos.router'
 import { CustomTextOverflowDemo } from './CustomTextOverflowDemo';
 import { RegexpTextDemo } from './RegexpTextDemo';
+import { SearchHighlightDemo } from './SearchHighlightDemo';
 import { TextDemo } from './TextDemo';
 
 
@@ -21,6 +22,10 @@ struct Index {
       description: '展示如何利用正则表达式快速创建特殊文本',
       route: 'RegexpTextDemo',
     },
+    {
+      description: '一个短信搜索高亮的例子，展示 TextOverflowPosition.auto 的用法',
+      route: 'SearchHighlightDemo',
+    },
   ]
   @Provide('pageInfos') pageInfos: NavPathStack = new NavPathStack()
 
@@ -32,6 +37,8 @@ struct Index {
       CustomTextOverflowDemo()
     } else if (name === 'RegexpTextDemo') {
       RegexpTextDemo()
+    } else if (name === 'SearchHighlightDemo') {
+      SearchHighlightDemo()
     }
   }
 

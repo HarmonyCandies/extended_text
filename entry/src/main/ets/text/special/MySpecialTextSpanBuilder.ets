@@ -7,13 +7,15 @@ import { LinkText } from './LinkText';
 export class MySpecialTextSpanBuilder extends extended_text.SpecialTextSpanBuilder {
   createSpecialText(flag: string, index: number, context: Context,
     textStyle?: text.TextStyle | undefined): extended_text.SpecialText | null {
-    if (this.isStart(flag, EmojiText.flag)) {
-      return new EmojiText(context, index - (EmojiText.flag.length - 1), textStyle,);
-    } else if (this.isStart(flag, DollarText.flag)) {
+    // if (this.isStart(flag, EmojiText.flag)) {
+    //   return new EmojiText(context, index - (EmojiText.flag.length - 1), textStyle,);
+    // } else
+      if (this.isStart(flag, DollarText.flag)) {
       return new DollarText(context, index - (DollarText.flag.length - 1), textStyle);
-    } else if (this.isStart(flag, LinkText.flag)) {
-      return new LinkText(context, index - (LinkText.flag.length - 1), textStyle);
     }
+    // else if (this.isStart(flag, LinkText.flag)) {
+    //   return new LinkText(context, index - (LinkText.flag.length - 1), textStyle);
+    // }
     return null;
   }
 

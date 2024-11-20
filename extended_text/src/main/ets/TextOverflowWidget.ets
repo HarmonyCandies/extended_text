@@ -1,9 +1,14 @@
 import { WidgetBuilder } from "./builder/WidgetBuilder";
 
 export enum TextOverflowPosition {
+  /// at the start of view.
   start,
+  /// at the middle of view.
   middle,
+  /// at the end of view.
   end,
+  /// make sure the keepVisible span in view.
+  auto,
 }
 
 export interface TextOverflowWidgetOptions {

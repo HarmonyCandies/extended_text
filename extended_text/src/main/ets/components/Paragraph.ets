@@ -134,7 +134,6 @@ export struct ExtendedParagraph {
       let end = 0;
       const child = children[children.length-1];
 
-      // if (true) {
       let copy = paragraphGraphBuilder.copy();
       this.text.build(copy, dimensions);
       let oneLineParagraph = copy.build();
@@ -142,20 +141,6 @@ export struct ExtendedParagraph {
       let estimatedCropRange = this._getEstimatedCropRange(paragraph, oneLineParagraph, child);
       start = estimatedCropRange.start!;
       end = estimatedCropRange.end!;
-      // }
-      // else{
-      //   let overflowRect = this._getOverflowRect(paragraph, child);
-      //   end = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
-      //     overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
-      //     .position;
-      //   end = this.text.convertTextPainterPostionToTextInputPostion(end);
-      //   switch (position) {
-      //     case TextOverflowPosition.middle:
-      //       start = end;
-      //       end += 1;
-      //       break;
-      //   }
-      // }
 
       start = Math.min(start, end);
       end = Math.max(start, end);

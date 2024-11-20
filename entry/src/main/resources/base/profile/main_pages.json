@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/CustomTextOverflowDemo",
     "pages/TextDemo",
-    "pages/RegexpTextDemo"
+    "pages/RegexpTextDemo",
+    "pages/SearchHighlightDemo"
   ]
 }
