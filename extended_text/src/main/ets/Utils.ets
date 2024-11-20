@@ -5,7 +5,7 @@ import { PlaceholderSpan } from "./painting/PlaceholderSpan";
 import { TextSpan } from "./painting/TextSpan";
 import { WidgetSpan } from "./painting/WidgetSpan";
 
-class UnsupportedOperationException implements BusinessError {
+export class UnsupportedOperationException implements BusinessError {
   code: number;
   data?: void | undefined;
   name: string;
@@ -20,15 +20,19 @@ class UnsupportedOperationException implements BusinessError {
   }
 }
 
-// textStyle?: text.TextStyle
-export class TextStyleUtils {
-  static copyWith(textStyle: text.TextStyle,
-  ): text.TextStyle {
-    return {}
-  }
-}
+export class AssertException implements BusinessError {
+  code: number;
+  data?: void | undefined;
+  name: string;
+  message: string;
+  stack?: string | undefined;
 
-class MyTextStyle implements text.TextStyle {
+  constructor(code: number, message: string, stack?: string) {
+    this.code = code;
+    this.name = 'AssertException';
+    this.message = message;
+    this.stack = stack;
+  }
 }
 
 export class ColorUtils {
@@ -153,6 +157,16 @@ export class RectUtils {
 
   static hasIntersection(rect1: common2D.Rect, rect2: common2D.Rect): boolean {
     return RectUtils.getIntersection(rect1, rect2) != null;
+  }
+
+  static overlaps(rect: common2D.Rect, other: common2D.Rect): boolean {
+    if (rect.right <= other.left || other.right <= rect.left) {
+      return false;
+    }
+    if (rect.bottom <= other.top || other.bottom <= rect.top) {
+      return false;
+    }
+    return true;
   }
 }
 

@@ -9,7 +9,6 @@ import { ExtendedParagraphBuilder } from "../builder/ParagraphBuilder";
 export interface WidgetSpanOptions extends PlaceholderSpanOptions {
   builder: WrappedBuilder<[ESObject]>;
   builderArgs: ESObject;
-  hide?: boolean,
 }
 
 export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
@@ -22,12 +21,10 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
       start: options.start,
       end: options.start != undefined ? options.start + this.actualText!.length : undefined
     };
-    this.hide = options.hide ?? false;
   }
 
   builder: WrappedBuilder<[ESObject]>;
   builderArgs: ESObject;
-  hide: boolean;
 
   build(builder: ExtendedParagraphBuilder, dimensions: Array<MeasureResult>): void {
     if (builder.placeholderCount >= dimensions.length) {
@@ -84,5 +81,9 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
       style: this.style,
       actualText: this.actualText,
     });
+  }
+
+  toActualText(): string {
+    return this.actualText ?? PlaceholderSpan.placeholder;
   }
 }

@@ -7,7 +7,14 @@ import { image } from '@kit.ImageKit';
 import { drawing } from '@kit.ArkGraphics2D'
 import { ExtendedParagraphBuilder } from '../builder/ParagraphBuilder';
 import { RectUtils } from '../Utils';
-import { Accumulator, debounce, InlineSpan, InlineSpanUtils } from '../../../../Index';
+import {
+  Accumulator,
+  AssertException,
+  debounce,
+  InlineSpan,
+  InlineSpanUtils,
+  UnsupportedOperationException
+} from '../../../../Index';
 import { inspector } from '@kit.ArkUI';
 
 @Component
@@ -23,7 +30,6 @@ export struct ExtendedParagraph {
   };
   private _paragraph: text.Paragraph | undefined = undefined;
   private _overflowWidgetRect: common2D.Rect | null = null;
-  private _hideWidgets: Array<number> = [];
   private _overflowClipRects: Array<common2D.Rect> = [];
 
   @Builder
@@ -96,9 +102,7 @@ export struct ExtendedParagraph {
     constraint: ConstraintSizeOptions): SizeResult {
 
     this._overflowWidgetRect = null;
-    this._hideWidgets.splice(0, this._hideWidgets.length);
-
-    let fontCollection = this.fontCollection?? new text.FontCollection();
+    let fontCollection = this.fontCollection ?? new text.FontCollection();
     let paragraphGraphBuilder = new ExtendedParagraphBuilder({
       textStyle: this.paragraphStyle?.textStyle,
       align: this.paragraphStyle?.align ?? text.TextAlign.START,
@@ -129,29 +133,50 @@ export struct ExtendedParagraph {
     let paragraph = paragraphGraphBuilder.build();
     paragraph.layoutSync(vp2px(maxWidth));
     let didVisualOverflow = this._didVisualOverflow(paragraph, constraint);
-    if (didVisualOverflow && this.overflowWidget != undefined && position != TextOverflowPosition.end) {
-      let start = 0;
-      let end = 0;
-      const child = children[children.length-1];
+    if (didVisualOverflow && this.overflowWidget != undefined) {
+      if (position == TextOverflowPosition.auto) {
+        let keepVisibleSpan: InlineSpan | null = null;
+        this.text.visitChildren((span) => {
+          if (span.keepVisible === true) {
+            keepVisibleSpan = span;
+            return false;
+          }
+          return true;
+        })
 
-      let copy = paragraphGraphBuilder.copy();
-      this.text.build(copy, dimensions);
-      let oneLineParagraph = copy.build();
-      oneLineParagraph.layoutSync(Infinity);
-      let estimatedCropRange = this._getEstimatedCropRange(paragraph, oneLineParagraph, child);
-      start = estimatedCropRange.start!;
-      end = estimatedCropRange.end!;
+        if (keepVisibleSpan == null && this.overflowWidget?.position == TextOverflowPosition.auto) {
+          throw new AssertException(0, 'TextOverflowPosition.auto 只在 TextSpan 设置了 keepVisible 的情况下生效');
+        }
+        let range = keepVisibleSpan!.range!;
+        let newParagraph = this._findNoOverflowByAuto(range, paragraphGraphBuilder, dimensions, constraint);
+        if (newParagraph != null) {
+          console.debug('find no overflow by layout the ParagraphBuilder' + this._layoutCount.toString() + ' times.')
+          paragraph = newParagraph;
+        }
+      } else if (position != TextOverflowPosition.end) {
+        let start = 0;
+        let end = 0;
+        const child = children[children.length-1];
 
-      start = Math.min(start, end);
-      end = Math.max(start, end);
+        let copy = paragraphGraphBuilder.copy();
+        this.text.build(copy, dimensions);
+        let oneLineParagraph = copy.build();
+        oneLineParagraph.layoutSync(Infinity);
+        let estimatedCropRange = this._getEstimatedCropRange(paragraph, oneLineParagraph, child, position);
+        start = estimatedCropRange.start!;
+        end = estimatedCropRange.end!;
 
-      let newParagraph = this._findNoOverflow({
-        start: start,
-        end: end,
-      }, paragraphGraphBuilder, dimensions, constraint);
-      if (newParagraph != null) {
-        console.debug('find no overflow by layout the ParagraphBuilder' + this._layoutCount.toString() + ' times.')
-        paragraph = newParagraph;
+        start = Math.min(start, end);
+        end = Math.max(start, end);
+
+        let newParagraph = this._findNoOverflow({
+          start: start,
+          end: end,
+        }, paragraphGraphBuilder, dimensions, constraint,);
+        if (newParagraph != null) {
+          console.debug('find no overflow by layout the ParagraphBuilder' + this._layoutCount.toString() + ' times.')
+          paragraph = newParagraph;
+        }
       }
     }
 
@@ -160,7 +185,7 @@ export struct ExtendedParagraph {
     if (this.overflowWidget != undefined) {
       const child = children[children.length-1];
       if (didVisualOverflow) {
-        this._overflowClipRects.push(...this._setOverflowRect(paragraph, child));
+        this._overflowClipRects.push(...this._setOverflowRect(paragraph, child, position));
       } else {
         // not render
         child.measure({
@@ -181,10 +206,68 @@ export struct ExtendedParagraph {
 
   }
 
-  _getEstimatedCropRange(paragraph: text.Paragraph, oneLineParagraph: text.Paragraph,
-    overflowWidget: Measurable,): TextRange {
+  // _handlexxx(paragraph: text.Paragraph, oneLineParagraph: text.Paragraph, overflowWidget: Measurable,
+  // ): TextOverflowPosition {
+  //   let keepVisibleSpan: InlineSpan | null = null;
+  //   this.text.visitChildren((span) => {
+  //     if (span.keepVisible === true) {
+  //       keepVisibleSpan = span;
+  //       return false;
+  //     }
+  //     return true;
+  //   })
+  //
+  //   if (keepVisibleSpan == null && this.overflowWidget?.position == TextOverflowPosition.auto) {
+  //     throw new AssertException(0, 'TextOverflowPosition.auto 只在 TextSpan 设置了 keepVisible 的情况下生效');
+  //   }
+  //   let range = keepVisibleSpan!.range!;
+  //   let start = range.start!;
+  //   let end = range.end!;
+  //
+  //
+  //   start = this.text.convertInlineSpanPostionToParagraphPostion(start);
+  //   end = this.text.convertInlineSpanPostionToParagraphPostion(end);
+  //   let rects = paragraph.getRectsForRange({ start: start, end: end, }, text.RectWidthStyle.MAX,
+  //     text.RectHeightStyle.MAX);
+  //   let xxx = oneLineParagraph.getRectsForRange({ start: start, end: end, }, text.RectWidthStyle.MAX,
+  //     text.RectHeightStyle.MAX);
+  //
+  //
+  //   let overflowWidgetRectStart: common2D.Rect =
+  //     this._getOverflowRect(paragraph, overflowWidget, TextOverflowPosition.start,);
+  //   let overflowWidgetRectEnd: common2D.Rect =
+  //     this._getOverflowRect(paragraph, overflowWidget, TextOverflowPosition.end,);
+  //   // in view
+  //   if (rects.length != 0) {
+  //     for (let index = 0; index < rects.length; index++) {
+  //       const element = rects[index];
+  //       if (RectUtils.hasIntersection(overflowWidgetRectEnd, element.rect)) {
+  //         return TextOverflowPosition.start;
+  //       }
+  //     }
+  //     return TextOverflowPosition.end;
+  //   } else {
+  //
+  //     let left = xxx[0].rect.left;
+  //
+  //     let right = oneLineParagraph.getMaxIntrinsicWidth() - xxx[0].rect.right;
+  //
+  //
+  //     // at the end
+  //     if (right >= (overflowWidgetRectEnd.right - overflowWidgetRectEnd.left)) {
+  //       return TextOverflowPosition.start;
+  //     }
+  //
+  //
+  //     return TextOverflowPosition.auto;
+  //   }
+  // }
 
-    let position = this.overflowWidget?.position;
+  _getEstimatedCropRange(paragraph: text.Paragraph, oneLineParagraph: text.Paragraph,
+    overflowWidget: Measurable,
+    position: TextOverflowPosition,
+  ): TextRange {
+
     let margin = overflowWidget.getMargin();
     let childResult = overflowWidget.measure({})
     let overflowWidgetSize: MeasureResult = {
@@ -205,7 +288,7 @@ export struct ExtendedParagraph {
             oneLineParagraph.getHeight() / 2).position;
         return {
           start: 0,
-          end: this.text.convertTextPainterPostionToTextInputPostion(end),
+          end: this.text.convertParagraphPostionToInlineSpanPostion(end),
         }
       }
       case TextOverflowPosition.middle: {
@@ -238,7 +321,7 @@ export struct ExtendedParagraph {
         let start = paragraph.getGlyphPositionAtCoordinate(overflowRect.right,
           overflowRect.top + (overflowRect.bottom - overflowRect.top) / 2)
           .position;
-        start = this.text.convertTextPainterPostionToTextInputPostion(start);
+        start = this.text.convertParagraphPostionToInlineSpanPostion(start);
 
         for (let index = lines.length - 1; index > lineNum; index--) {
           const line = lines[index];
@@ -250,7 +333,7 @@ export struct ExtendedParagraph {
         let end =
           oneLineParagraph.getGlyphPositionAtCoordinate(Math.max(overflowWidgetSize.width, maxIntrinsicWidth),
             oneLineParagraph.getHeight() / 2).position;
-        end = this.text.convertTextPainterPostionToTextInputPostion(end);
+        end = this.text.convertParagraphPostionToInlineSpanPostion(end);
         return {
           start: start,
           end: end,
@@ -266,8 +349,7 @@ export struct ExtendedParagraph {
   }
 
   _getOverflowRect(paragraph: text.Paragraph,
-    overflowWidget: Measurable,): common2D.Rect {
-    let position = this.overflowWidget?.position;
+    overflowWidget: Measurable, position: TextOverflowPosition): common2D.Rect {
     let textWidth = paragraph.getMaxWidth();
     let margin = overflowWidget.getMargin();
 
@@ -337,10 +419,10 @@ export struct ExtendedParagraph {
   }
 
   _setOverflowRect(paragraph: text.Paragraph,
-    overflowWidget: Measurable,): Array<common2D.Rect> {
+    overflowWidget: Measurable, position: TextOverflowPosition,): Array<common2D.Rect> {
     let childResult = overflowWidget.measure({})
     let margin = overflowWidget.getMargin();
-    let overflowWidgetRect: common2D.Rect = this._getOverflowRect(paragraph, overflowWidget);
+    let overflowWidgetRect: common2D.Rect = this._getOverflowRect(paragraph, overflowWidget, position,);
     let overflowWidgetSize: MeasureResult = {
       width: vp2px((childResult.width + margin.start + margin.end)),
       height: vp2px((childResult.height + margin.top + margin.bottom)),
@@ -407,16 +489,54 @@ export struct ExtendedParagraph {
 
   _layoutCount: number = 0;
 
+  _findNoOverflowByAuto(range: TextRange, paragraphGraphBuilder: ExtendedParagraphBuilder,
+    dimensions: Array<MeasureResult>, constraint: ConstraintSizeOptions): text.Paragraph | null {
+
+    this._layoutCount = 0;
+    let hasVisualOverflow: Boolean = true;
+    let result: text.Paragraph | null = null;
+    let rawRange: TextRange = {
+      start: range.start,
+      end: range.end,
+    }
+    let maxOffset = Array.from(this.text!.toActualText()).map(char => char.codePointAt(0) || 0).length;
+    let maxEnd = maxOffset;
+    while (hasVisualOverflow) {
+      result = this._tryToFindNoOverflow(range, paragraphGraphBuilder, dimensions, constraint, false);
+      hasVisualOverflow = result == null;
+      if (hasVisualOverflow) {
+        range.start = Math.min(range.start! + 1, rawRange.start!);
+        range.end = Math.max(range.end! - 1, rawRange.end!);
+      } else {
+        range.start = Math.min(range.start! - 1, 0);
+        range.end = Math.max(range.end! + 1, maxOffset);
+        let pre: TextRange = {
+          start: range.start,
+          end: range.end,
+        };
+        let result = this._tryToFindNoOverflow(range, paragraphGraphBuilder, dimensions, constraint, false);
+        let _hasVisualOverflow = result == null;
+        if (_hasVisualOverflow) {
+          hasVisualOverflow = false;
+        } else {
+
+        }
+
+      }
+    }
+    return result;
+  }
+
   _findNoOverflow(range: TextRange, paragraphGraphBuilder: ExtendedParagraphBuilder,
     dimensions: Array<MeasureResult>, constraint: ConstraintSizeOptions): text.Paragraph | null {
     this._layoutCount = 0;
     let hasVisualOverflow: Boolean = true;
     let result: text.Paragraph | null = null;
 
-    let maxOffset = Array.from(this.text!.textSpanToActualText()).map(char => char.codePointAt(0) || 0).length;
+    let maxOffset = Array.from(this.text!.toActualText()).map(char => char.codePointAt(0) || 0).length;
     let maxEnd = maxOffset;
     while (hasVisualOverflow) {
-      result = this._tryToFindNoOverflow1(range, paragraphGraphBuilder, dimensions, constraint);
+      result = this._tryToFindNoOverflow(range, paragraphGraphBuilder, dimensions, constraint, true);
       hasVisualOverflow = result == null;
       if (hasVisualOverflow) {
         range.end = Math.min(
@@ -431,7 +551,7 @@ export struct ExtendedParagraph {
           start: range.start,
           end: range.end,
         };
-        let result = this._tryToFindNoOverflow1(range, paragraphGraphBuilder, dimensions, constraint);
+        let result = this._tryToFindNoOverflow(range, paragraphGraphBuilder, dimensions, constraint, true);
         let _hasVisualOverflow = result == null;
         if (_hasVisualOverflow) {
           // fix end
@@ -456,10 +576,10 @@ export struct ExtendedParagraph {
     return result;
   }
 
-  _tryToFindNoOverflow1(range: TextRange, paragraphGraphBuilder: ExtendedParagraphBuilder,
-    dimensions: Array<MeasureResult>, constraint: ConstraintSizeOptions): text.Paragraph | null {
+  _tryToFindNoOverflow(range: TextRange, paragraphGraphBuilder: ExtendedParagraphBuilder,
+    dimensions: Array<MeasureResult>, constraint: ConstraintSizeOptions, excludeRange: boolean): text.Paragraph | null {
     let builder = paragraphGraphBuilder.copy();
-    let text = this._cutOffInlineSpan(range, this.text, new Accumulator(), new Accumulator(), builder.hideWidgets);
+    let text = this._cutOffInlineSpan(range, this.text, new Accumulator(), excludeRange);
     text.build(builder, dimensions);
     let p = builder.build();
     p.layoutSync(vp2px(constraint.maxWidth as number));
@@ -471,8 +591,7 @@ export struct ExtendedParagraph {
     }
   }
 
-  _cutOffInlineSpan(range: TextRange, value: InlineSpan, offset: Accumulator,
-    hideWidgetIndex: Accumulator, hideWidgets: Array<number>): InlineSpan {
+  _cutOffInlineSpan(range: TextRange, value: InlineSpan, offset: Accumulator, excludeRange: boolean): InlineSpan {
     let output: InlineSpan;
     let actualText = value.actualText;
     if (value instanceof TextSpan) {
@@ -489,7 +608,7 @@ export struct ExtendedParagraph {
         const finallyRunes: number[] = [];
         for (let i = 0; i < runes.length; i++) {
           const index = i + offset.value;
-          let contains = range.start! <= index && index <= range.end!
+          let contains = range.start! <= index && index <= range.end! && excludeRange;
           if (contains) {
             continue; // 如果索引在指定范围内，则跳过
           }
@@ -512,7 +631,7 @@ export struct ExtendedParagraph {
         children = [];
         for (let index = 0; index < value.children.length; index++) {
           const child = value.children[index];
-          children.push(this._cutOffInlineSpan(range, child, offset, hideWidgetIndex, hideWidgets));
+          children.push(this._cutOffInlineSpan(range, child, offset, excludeRange));
         }
       }
 
@@ -523,10 +642,11 @@ export struct ExtendedParagraph {
           style: value.style,
           start: start,
           actualText: actualText,
+          keepVisible: value.keepVisible,
         }
       );
     } else if (value instanceof WidgetSpan) {
-      let hide = range.start! <= offset.value && offset.value <= range.end!;
+      let hide = range.start! <= offset.value && offset.value <= range.end! && excludeRange;
       output = new WidgetSpan({
         builder: value.builder,
         builderArgs: value.builderArgs,
@@ -537,12 +657,9 @@ export struct ExtendedParagraph {
         start: value.start,
         style: value.style,
         actualText: value.actualText,
+        keepVisible: value.keepVisible,
       })
-      if (hide) {
-        hideWidgets.push(hideWidgetIndex.value);
-      }
       offset.increment(actualText?.length ?? 1);
-      hideWidgetIndex.increment(1);
     } else {
       output = value;
     }

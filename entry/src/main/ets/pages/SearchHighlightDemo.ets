@@ -93,6 +93,7 @@ struct MessageItem {
   context: Context = getContext(this);
   maxLines: number = 3;
   textOverflowPosition: TextOverflowPosition = TextOverflowPosition.end;
+  dialogController: CustomDialogController | null = null;
 
   build() {
     Row() {
@@ -117,7 +118,9 @@ struct MessageItem {
       color: Color.Gray,
       width: 1,
     }).padding(10)
-    .margin(20)
+    .margin(20).onClick(() => {
+      this.showFullTextImage(this.message);
+    })
   }
 
   onTextOverflowWidgetClick(content: string): void {
@@ -127,6 +130,62 @@ struct MessageItem {
     //     'maxLines: ' + maxLines?.toString(),
     //   alignment: Alignment.Center,
     // })
+  }
+
+  async showFullTextImage(text: string): Promise<void> {
+    this.dialogController = new CustomDialogController({
+      builder: FullTextDialog({
+        text: text,
+        controller: this.dialogController!,
+      }),
+      autoCancel: true,
+      onWillDismiss: (dismissDialogAction: DismissDialogAction) => {
+
+      },
+      alignment: DialogAlignment.Center,
+      offset: { dx: 0, dy: -20 },
+      customStyle: false,
+      cornerRadius: 20,
+      width: 300,
+      // height: 500,
+      borderWidth: 1,
+      borderStyle: BorderStyle.Dashed,
+      borderColor: Color.Blue,
+      backgroundColor: Color.White,
+    });
+    this.dialogController.open();
+  }
+}
+
+@CustomDialog
+@Component
+struct FullTextDialog {
+  text?: string;
+  controller?: CustomDialogController;
+  context: Context = getContext(this);
+
+  build() {
+    Column() {
+      Button('关闭')
+        .onClick(() => {
+          if (this.controller != undefined) {
+            this.controller.close()
+          }
+        }).backgroundColor(0xffffff).fontColor(Color.Black)
+      ExtendedText({
+        text: this.text, specialTextSpanBuilder: new HighlightTextSpanBuilder(),
+        paragraphStyle: {
+          textStyle: {
+            color: ColorUtils.resourceColorTo2DColor($r('sys.color.font'), this.context),
+            fontSize: vp2px(18),
+          },
+        },
+
+      })
+    }.padding(20)
+    .borderRadius
+    (10
+    )
   }
 }
 

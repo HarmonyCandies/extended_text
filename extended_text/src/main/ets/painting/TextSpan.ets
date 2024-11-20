@@ -131,4 +131,21 @@ export class TextSpan extends InlineSpan {
       }
     );
   }
+
+  toActualText(): string {
+    let buffer = new StringBuffer();
+    if (this.actualText != undefined) {
+      buffer.write(this.actualText);
+    } else if (this.text != undefined) {
+      buffer.write(this.text);
+    }
+
+    if (this.children != undefined) {
+      for (let index = 0; index < this.children.length; index++) {
+        const child = this.children[index];
+        buffer.write(child.toActualText());
+      }
+    }
+    return buffer.value;
+  }
 }

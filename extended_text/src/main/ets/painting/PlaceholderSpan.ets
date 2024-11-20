@@ -26,6 +26,8 @@ export interface PlaceholderSpanOptions extends InlineSpanOptions {
    * @since 12
    */
   baselineOffset?: number;
+
+  hide?: boolean;
 }
 
 export abstract class PlaceholderSpan extends InlineSpan {
@@ -34,6 +36,7 @@ export abstract class PlaceholderSpan extends InlineSpan {
     this.align = options.align ?? text.PlaceholderAlignment.CENTER_OF_ROW_BOX;
     this.baseline = options.baseline ?? text.TextBaseline.ALPHABETIC;
     this.baselineOffset = options.baselineOffset ?? 0;
+    this.hide = options.hide ?? false;
   }
 
   /// The unicode character to represent a placeholder.
@@ -59,6 +62,8 @@ export abstract class PlaceholderSpan extends InlineSpan {
    * @since 12
    */
   baselineOffset: number;
+
+  hide: boolean;
 
   computeToPlainText(buffer: StringBuffer): void {
     buffer.write(PlaceholderSpan.placeholder)

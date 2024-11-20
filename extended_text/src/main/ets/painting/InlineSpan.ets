@@ -2,10 +2,8 @@ import { text } from "@kit.ArkGraphics2D"
 import { InlineSpanVisitor } from "../Declare";
 import { ExtendedParagraphBuilder } from "../builder/ParagraphBuilder";
 import { Accumulator, InlineSpanUtils, StringBuffer } from "../Utils";
-import { buffer } from "@kit.ArkTS";
 import { TextSpan } from "./TextSpan";
 import { PlaceholderSpan } from "./PlaceholderSpan";
-import { WidgetSpan } from "./WidgetSpan";
 
 
 export interface InlineSpanOptions {
@@ -74,22 +72,10 @@ export abstract class InlineSpan {
 
   abstract computeToPlainText(buffer: StringBuffer): void;
 
-  textSpanToActualText(): string {
+  abstract toActualText(): string;
 
-    let buffer = new StringBuffer();
-    this.visitChildren((e) => {
-      if (e.isSpecialInlineSpan) {
-        buffer.write(e.actualText!);
-      } else {
-        e.computeToPlainText(buffer);
-      }
-      return true;
-    });
 
-    return buffer.value;
-  }
-
-  convertTextPainterPostionToTextInputPostion(textPosition: number): number {
+  convertParagraphPostionToInlineSpanPostion(textPosition: number): number {
     let caretOffset = textPosition;
     if (caretOffset <= 0) {
       return caretOffset;
@@ -129,4 +115,28 @@ export abstract class InlineSpan {
 
 
   abstract joinChar(offset: Accumulator, char?: string): InlineSpan;
+
+
+  convertInlineSpanPostionToParagraphPostion(textPosition: number): number {
+    let caretOffset = textPosition;
+    let textOffset = 0;
+    this.visitChildren((ts) => {
+      if (ts.isSpecialInlineSpan) {
+        let length = ts.actualText!.length;
+        caretOffset -= length - ts.getInlineOffset();
+        textOffset += length;
+      } else {
+        textOffset += ts.getInlineOffset();
+      }
+      if (textOffset >= textPosition) {
+        return false;
+      }
+      return true;
+    });
+    if (caretOffset != textPosition) {
+      return Math.max(0, caretOffset);
+    }
+
+    return textPosition;
+  }
 }

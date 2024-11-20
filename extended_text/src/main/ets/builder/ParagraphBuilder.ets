@@ -10,7 +10,6 @@ export class ExtendedParagraphBuilder extends text.ParagraphBuilder {
   placeholderCount: number = 0;
   paragraphStyle: text.ParagraphStyle;
   fontCollection: text.FontCollection
-  hideWidgets: Array<number> = [];
 
   copy(): ExtendedParagraphBuilder {
     return new ExtendedParagraphBuilder(this.paragraphStyle, this.fontCollection);
