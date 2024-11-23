@@ -5,9 +5,9 @@
 
 
 
-| ![text_demo.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/text_demo.png) | ![overflow.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/overflow.png) |
-| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-
+| ![text_demo.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/text_demo.png)                   | ![overflow.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/overflow.png)                                   |
+| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![joinZeroWidthSpace.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/joinZeroWidthSpace.png) | ![textOverflowPosition_auto.png](https://github.com/HarmonyCandies/HarmonyCandies/blob/main/gif/extended_text/textOverflowPosition_auto.png) |
 
 
 关注公众号 `糖果代码铺` ，获取更多鸿蒙开发资讯.
@@ -216,9 +216,14 @@ export function buildHyperlink(builderArgs: ESObject) {
 
 ```typescript
 export enum TextOverflowPosition {
+  /// at the start of text view.
   start,
+  /// at the middle of text view.
   middle,
+  /// at the end of text view.
   end,
+  /// make sure the keepVisible span in text view.
+  auto,
 }
 
 export interface TextOverflowWidgetOptions {

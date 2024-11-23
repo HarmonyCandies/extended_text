@@ -46,8 +46,11 @@ export struct SearchHighlightDemo {
             if (value != '') {
               for (let index = 0; index < messages.length; index++) {
                 const element = messages[index];
-                if (element.includes(value)) {
-                  this.searchMeassages.push(element.replace(value, HighlightText.getHighlightString(value)));
+                if (element.toLowerCase().includes(value.toLowerCase())) {
+                  const regex = new RegExp(value, "i");
+                  let regExpExecArray = regex.exec(element);
+                  this.searchMeassages.push(element.replace(regex,
+                    HighlightText.getHighlightString(regExpExecArray![0]),));
                 }
               }
             } else {
@@ -70,7 +73,7 @@ export struct SearchHighlightDemo {
         }.layoutWeight(1)
       }
 
-    }.title('TextDemo')
+    }.title('SearchHighlightDemo')
   }
 }
 
@@ -124,12 +127,10 @@ struct MessageItem {
   }
 
   onTextOverflowWidgetClick(content: string): void {
-    // promptAction.showToast({
-    //   message: '点击溢出文本!\n' + 'TextOverflowPosition: ' + TextOverflowPosition[position].toString() +
-    //     '\n' +
-    //     'maxLines: ' + maxLines?.toString(),
-    //   alignment: Alignment.Center,
-    // })
+    promptAction.showToast({
+      message: '点击溢出部分',
+      alignment: Alignment.Center,
+    })
   }
 
   async showFullTextImage(text: string): Promise<void> {
