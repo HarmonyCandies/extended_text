@@ -223,6 +223,7 @@ export enum TextOverflowPosition {
   /// at the end of text view.
   end,
   /// make sure the keepVisible span in text view.
+  /// [See also]: https://github.com/HarmonyCandies/extended_text/blob/main/entry/src/main/ets/pages/SearchHighlightDemo.ets  
   auto,
 }
 

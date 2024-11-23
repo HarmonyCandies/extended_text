@@ -1,6 +1,7 @@
 ## 1.1.0
 
 * Add TextOverflowPosition.auto and SearchHighlightDemo
+* Improve the algorithm efficiency of [findNoOverflow]
 
 ## 1.0.1
 

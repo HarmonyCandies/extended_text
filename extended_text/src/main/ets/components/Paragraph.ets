@@ -558,41 +558,42 @@ export struct ExtendedParagraph {
       let start = estimatedRange.start!;
       let end = estimatedRange.end!;
       // 首先保证一端不变，如果另一段已经无法满足，再改变另外一端
-      // if (start == 0) {
-      //   estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
-      //   if (estimatedRange.end == end) {
-      //     estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
-      //   }
-      // } else if (end == maxOffset) {
-      //   estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
-      //   if (estimatedRange.start == start) {
-      //     estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
-      //   }
-      // } else {
-      //   estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
-      //   estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
-      // }
-
+      // estimatedRange 是通过计算的预估的范围，大部分情况下，2分法效率都不高，换成一个个移动
       if (start == 0) {
-        estimatedRange.end =
-          Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+        estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
         if (estimatedRange.end == end) {
-          estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
-            keepVisibleRange.start!);
+          estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
         }
       } else if (end == maxOffset) {
-        estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
-          keepVisibleRange.start!);
+        estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
         if (estimatedRange.start == start) {
-          estimatedRange.end =
-            Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+          estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
         }
       } else {
-        estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
-          keepVisibleRange.start!);
-        estimatedRange.end =
-          Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+        estimatedRange.start = Math.min(estimatedRange.start! + 1, keepVisibleRange.start!);
+        estimatedRange.end = Math.max(estimatedRange.end! - 1, keepVisibleRange.end!);
       }
+
+      // if (start == 0) {
+      //   estimatedRange.end =
+      //     Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+      //   if (estimatedRange.end == end) {
+      //     estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
+      //       keepVisibleRange.start!);
+      //   }
+      // } else if (end == maxOffset) {
+      //   estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
+      //     keepVisibleRange.start!);
+      //   if (estimatedRange.start == start) {
+      //     estimatedRange.end =
+      //       Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+      //   }
+      // } else {
+      //   estimatedRange.start = Math.min(estimatedRange.start! + (keepVisibleRange.start! - estimatedRange.start!) / 2,
+      //     keepVisibleRange.start!);
+      //   estimatedRange.end =
+      //     Math.max(estimatedRange.end! - (estimatedRange.end! - keepVisibleRange.end!) / 2, keepVisibleRange.end!);
+      // }
     }
 
     while (hasVisualOverflow) {
@@ -655,12 +656,6 @@ export struct ExtendedParagraph {
             end: Math.min(pre.end! + 1, maxOffset),
           }
         ], 0);
-
-        // // 没有到边界
-        // if (hasVisualOverflow) {
-        //   range.start = Math.max(range.start! - 1, 0);
-        //   range.end = Math.min(range.end! + 1, maxOffset);
-        // }
       }
     }
     return [result, postion];
@@ -674,12 +669,14 @@ export struct ExtendedParagraph {
 
     let maxOffset = Array.from(this.text!.toActualText()).map(char => char.codePointAt(0) || 0).length;
     let maxEnd = maxOffset;
+    // range 是通过计算的预估的范围，大部分情况下，2分法效率都不高，换成一个个移动
     while (hasVisualOverflow) {
       result = this._tryToFindNoOverflow(range, paragraphGraphBuilder, dimensions, constraint, true);
       hasVisualOverflow = result == null;
       if (hasVisualOverflow) {
         range.end = Math.min(
-          range.end! + Math.max(Math.floor((maxEnd - range.end!) / 2), 1),
+          range.end! + 1,
+          // Math.max(Math.floor((maxEnd - range.end!) / 2), 1),
           maxOffset
         );
       } else {
@@ -702,7 +699,9 @@ export struct ExtendedParagraph {
           range.end = Math.max(
             range.start!,
             Math.min(
-              maxEnd - Math.max(Math.floor((maxEnd - range.start!) / 2), 1), maxEnd));
+              maxEnd - 1
+              //Math.max(Math.floor((maxEnd - range.start!) / 2), 1)
+              , maxEnd));
           // if range is not changed, so maybe we should break.
           if (pre.start == range.start && pre.end == range.end) {
             hasVisualOverflow = false;
