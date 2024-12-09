@@ -21,7 +21,7 @@
     - [InlineSpan](#inlinespan)
       - [TextSpan](#textspan)
       - [PlaceholderSpan](#placeholderspan)
-      - [PlaceholderSpan](#placeholderspan-1)
+      - [WidgetSpan](#widgetspan)
     - [OverflowWidget](#overflowwidget)
     - [SpecialTextSpanBuilder](#specialtextspanbuilder)
       - [SpecialText](#specialtext)
@@ -156,7 +156,7 @@ export interface PlaceholderSpanOptions extends InlineSpanOptions {
 }
 ```
 
-#### PlaceholderSpan
+#### WidgetSpan
 
 
 继承于 `PlaceholderSpan` ，用于显示显示组件。

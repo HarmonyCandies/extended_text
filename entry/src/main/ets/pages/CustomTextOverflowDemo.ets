@@ -54,10 +54,13 @@ export struct CustomTextOverflowDemo {
           maxLines: maxLines,
         },
       })
-    }.alignItems(HorizontalAlign.Start).border({
+    }
+    .alignItems(HorizontalAlign.Start)
+    .border({
       color: Color.Gray,
       width: 1,
-    }).padding(10)
+    })
+    .padding(10)
     .margin({
       top: 20,
     })

@@ -121,20 +121,6 @@ class _RenderNode extends RenderNode {
       }
     }
     this.paragraph.paint(context.canvas, 0, 0);
-    // let xxx = new drawing.Brush();
-    // xxx.setColor({
-    //   alpha: 50,
-    //   red: 255,
-    //   green: 0,
-    //   blue: 0,
-    // },)
-    // context.canvas.attachBrush(xxx)
-    // context.canvas.drawRect({
-    //   top: 0,
-    //   left: 0,
-    //   right: context.size.width,
-    //   bottom: context.size.height,
-    // })
 
     if (this.overflowClipRects.length != 0) {
       context.canvas.restore();
