@@ -1,5 +1,6 @@
 import router from '@ohos.router'
 import { CustomTextOverflowDemo } from './CustomTextOverflowDemo';
+import { GradientTextDemo } from './GradientTextDemo';
 import { RegexpTextDemo } from './RegexpTextDemo';
 import { SearchHighlightDemo } from './SearchHighlightDemo';
 import { TextDemo } from './TextDemo';
@@ -26,6 +27,10 @@ struct Index {
       description: '一个短信搜索高亮的例子，展示 TextOverflowPosition.auto 的用法',
       route: 'SearchHighlightDemo',
     },
+    {
+      description: '渐进颜色的文本',
+      route: 'GradientTextDemo',
+    },
   ]
   @Provide('pageInfos') pageInfos: NavPathStack = new NavPathStack()
 
@@ -39,6 +44,8 @@ struct Index {
       RegexpTextDemo()
     } else if (name === 'SearchHighlightDemo') {
       SearchHighlightDemo()
+    } else if (name === 'GradientTextDemo') {
+      GradientTextDemo()
     }
   }
 

@@ -7,6 +7,7 @@ import { TextSpan } from '../painting/TextSpan';
 import { FrameNode, NodeController, RenderNode } from '@kit.ArkUI';
 import { SpecialTextSpanBuilder } from '../builder/SpecialTextSpanBuilder';
 import { Accumulator } from '../Utils';
+import { GradientConfig } from '../GradientConfig';
 
 @Component
 export struct ExtendedText {
@@ -17,6 +18,7 @@ export struct ExtendedText {
   @Watch('reBuildTextSpan') @Prop text?: string;
   @Watch('reBuildTextSpan') @Prop textSpan?: InlineSpan;
   @Watch('reBuildTextSpan') @Prop joinZeroWidthSpace: boolean = false;
+  @Watch('reBuildTextSpan') @Prop gradientConfig?: GradientConfig;
   private _building: boolean = false;
   private _nodeController: _NodeController = new _NodeController()
 
@@ -59,7 +61,7 @@ export struct ExtendedText {
           text: this._buildTextSpan(),
           onDrawText: (paragraph, overflowClipRects: Array<common2D.Rect>) => {
             this._nodeController.clearNodes();
-            let node = new _RenderNode(paragraph, overflowClipRects);
+            let node = new _RenderNode(paragraph, overflowClipRects, this.gradientConfig);
 
             node.size = {
               width: paragraph.getMaxWidth(),
@@ -102,14 +104,16 @@ export struct ExtendedText {
 }
 
 class _RenderNode extends RenderNode {
-  constructor(paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>) {
+  constructor(paragraph: text.Paragraph, overflowClipRects: Array<common2D.Rect>, gradientConfig?: GradientConfig) {
     super();
     this.paragraph = paragraph;
     this.overflowClipRects = overflowClipRects;
+    this.gradientConfig = gradientConfig;
   }
 
   paragraph: text.Paragraph;
   overflowClipRects: Array<common2D.Rect>;
+  gradientConfig?: GradientConfig;
 
   async draw(context: DrawContext) {
     if (this.overflowClipRects.length != 0) {
@@ -120,7 +124,33 @@ class _RenderNode extends RenderNode {
         context.canvas.clipRect(overflowClipRect, drawing.ClipOp.DIFFERENCE);
       }
     }
+
+    const canvas = context.canvas;
+    // if (this.gradientConfig != undefined) {
+    //   let pen = this.gradientConfig.drawGradient(context, this.paragraph);
+    //   canvas.attachPen(pen);
+    // }
+    let brush = new drawing.Brush();
+    let width = context.size.width;
+    let height = context.size.height;
+    let shaderEffect = drawing.ShaderEffect.createLinearGradient({ x: 0, y: height / 2 }, { x: width, y: height / 2 },
+      [0xFF2196F3, 0xFFF44336], drawing.TileMode.CLAMP);
+    brush.setShaderEffect(shaderEffect);
+    brush.setBlendMode(drawing.BlendMode.DIFFERENCE);
     this.paragraph.paint(context.canvas, 0, 0);
+    context.canvas.save();
+    context.canvas.attachBrush(brush);
+    context.canvas.drawRect({
+      left: 0,
+      top: 0,
+      right: width,
+      bottom: height
+    });
+    context.canvas.detachBrush();
+    context.canvas.restore();
+    // if (this.gradientConfig != undefined) {
+    //   canvas.detachPen();
+    // }
 
     if (this.overflowClipRects.length != 0) {
       context.canvas.restore();

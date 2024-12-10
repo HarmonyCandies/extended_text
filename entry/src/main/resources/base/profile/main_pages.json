@@ -4,6 +4,7 @@
     "pages/CustomTextOverflowDemo",
     "pages/TextDemo",
     "pages/RegexpTextDemo",
-    "pages/SearchHighlightDemo"
+    "pages/SearchHighlightDemo",
+    "pages/GradientTextDemo"
   ]
 }
