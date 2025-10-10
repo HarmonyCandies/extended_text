@@ -80,6 +80,7 @@ export class WidgetSpan extends PlaceholderSpan implements WidgetBuilder {
       start: this.start,
       style: this.style,
       actualText: this.actualText,
+      keepVisible: this.keepVisible
     });
   }
 
