@@ -127,7 +127,7 @@ export class TextSpan extends InlineSpan {
         style: this.style,
         actualText: actualText,
         start: start,
-
+        keepVisible: this.keepVisible
       }
     );
   }
