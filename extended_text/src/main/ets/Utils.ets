@@ -4,6 +4,7 @@ import { InlineSpan } from "./painting/InlineSpan";
 import { PlaceholderSpan } from "./painting/PlaceholderSpan";
 import { TextSpan } from "./painting/TextSpan";
 import { WidgetSpan } from "./painting/WidgetSpan";
+import { decimalTo2DColor, numberTo2DColor, packedResourceColorTo2DColor } from "./packedColor";
 
 export class UnsupportedOperationException implements BusinessError {
   code: number;
@@ -108,28 +109,17 @@ export class ColorUtils {
     throw new UnsupportedOperationException(0, '无法解析颜色的格式');
   }
 
-  static numberTo2DColor(hex: number): common2D.Color {
-    const hasAlpha = (hex & 0xff000000) !== 0;
-    return {
-      alpha: hasAlpha ? (hex >> 24) & 0xff : 255, // 如果没有透明位，默认为 255（不透明）
-      red: (hex >> 16) & 0xff,
-      green: (hex >> 8) & 0xff,
-      blue: hex & 0xff,
-    };
+  // leftover: packedColor numberTo2DColor (optional bitLength=32 for known ARGB alpha 0).
+  static numberTo2DColor(hex: number, bitLength?: 24 | 32): common2D.Color {
+    return numberTo2DColor(hex, bitLength);
   }
 
   static resourceTo2DColor(resource: Resource, context: Context): common2D.Color {
-    return ColorUtils.decimalTo2DColor(context.resourceManager.getColorSync(resource.id))
+    return packedResourceColorTo2DColor(context.resourceManager.getColorSync(resource.id));
   }
 
-  static decimalTo2DColor(decimal: number): common2D.Color {
-    const hasAlpha = decimal > 0xffffff; // 判断是否为 32 位（ARGB）
-    return {
-      alpha: hasAlpha ? (decimal >> 24) & 0xff : 255, // 如果没有 alpha，默认设为 255（不透明）
-      red: (decimal >> 16) & 0xff,
-      green: (decimal >> 8) & 0xff,
-      blue: decimal & 0xff,
-    };
+  static decimalTo2DColor(decimal: number, bitLength?: 24 | 32): common2D.Color {
+    return decimalTo2DColor(decimal, bitLength);
   }
 }
 
